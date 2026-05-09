@@ -1,0 +1,31 @@
+# Flutter
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+.packages
+*.freezed.dart
+*.g.dart
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+node_modules/
+
+# Build outputs
+*.exe
+*.msi
+dist/

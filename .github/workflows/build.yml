@@ -1,0 +1,54 @@
+name: Build
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter test --coverage
+
+  build:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [analyze, test]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaperWise-${{ github.ref_name }}
+          path: build/windows/x64/runner/Release/
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/windows/x64/runner/Release/paperwise.exe
+          body: |
+            PaperWise ${{ github.ref_name }}
+            
+            下载 EXE 后双击运行，首次使用需在设置页配置 API Key。
