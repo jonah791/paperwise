@@ -8,7 +8,9 @@ import 'core/services/config_service.dart';
 import 'core/services/cache_service.dart';
 import 'core/services/search_service.dart';
 import 'core/services/paper_service.dart';
+import 'core/services/network_service.dart';
 import 'core/models/config.dart';
+import 'core/services/network_service.dart';
 import 'core/utils/logger.dart';
 import 'ui/pages/search_page.dart';
 import 'ui/pages/library_page.dart';
@@ -35,6 +37,9 @@ void main() async {
   );
   await paperService.init();
 
+  final networkService = NetworkService();
+  networkService.init();
+
   await windowManager.waitUntilReadyToShow();
   await windowManager.setTitle('PaperWise');
   await windowManager.setMinimumSize(const Size(1024, 700));
@@ -58,6 +63,8 @@ void main() async {
     configService: configService,
     paperService: paperService,
     searchService: searchService,
+    cacheService: cacheService,
+    networkService: networkService,
     showWelcome: showWelcome,
   ));
 }
@@ -66,12 +73,16 @@ class Dependencies extends InheritedWidget {
   final ConfigService configService;
   final PaperService paperService;
   final SearchService searchService;
+  final CacheService cacheService;
+  final NetworkService networkService;
 
   const Dependencies({
     super.key,
     required this.configService,
     required this.paperService,
     required this.searchService,
+    required this.cacheService,
+    required this.networkService,
     required super.child,
   });
 
@@ -89,6 +100,8 @@ class PaperWiseApp extends StatefulWidget {
   final ConfigService configService;
   final PaperService paperService;
   final SearchService searchService;
+  final CacheService cacheService;
+  final NetworkService networkService;
   final bool showWelcome;
 
   const PaperWiseApp({
@@ -96,6 +109,8 @@ class PaperWiseApp extends StatefulWidget {
     required this.configService,
     required this.paperService,
     required this.searchService,
+    required this.cacheService,
+    required this.networkService,
     this.showWelcome = false,
   });
 
@@ -149,6 +164,8 @@ class _PaperWiseAppState extends State<PaperWiseApp> with TrayListener {
       configService: widget.configService,
       paperService: widget.paperService,
       searchService: widget.searchService,
+      cacheService: widget.cacheService,
+      networkService: widget.networkService,
       child: MaterialApp(
         title: 'PaperWise',
         debugShowCheckedModeBanner: false,
@@ -206,6 +223,8 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final network = Dependencies.of(context).networkService;
     return Scaffold(
       body: CallbackShortcuts(
         bindings: {
@@ -219,14 +238,35 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
           autofocus: true,
           child: Row(
             children: [
-              NavigationRail(
-                selectedIndex: _currentIndex,
-                onDestinationSelected: (i) => setState(() => _currentIndex = i),
-                labelType: NavigationRailLabelType.all,
-                destinations: const [
-                  NavigationRailDestination(icon: Icon(Icons.search), label: Text('搜索')),
-                  NavigationRailDestination(icon: Icon(Icons.library_books), label: Text('论文库')),
-                  NavigationRailDestination(icon: Icon(Icons.settings), label: Text('设置')),
+              Column(
+                children: [
+                  Expanded(
+                    child: NavigationRail(
+                      selectedIndex: _currentIndex,
+                      onDestinationSelected: (i) => setState(() => _currentIndex = i),
+                      labelType: NavigationRailLabelType.all,
+                      destinations: const [
+                        NavigationRailDestination(icon: Icon(Icons.search), label: Text('搜索')),
+                        NavigationRailDestination(icon: Icon(Icons.library_books), label: Text('论文库')),
+                        NavigationRailDestination(icon: Icon(Icons.settings), label: Text('设置')),
+                      ],
+                    ),
+                  ),
+                  StreamBuilder<bool>(
+                    stream: network.statusStream,
+                    initialData: network.isOnline,
+                    builder: (context, snapshot) {
+                      final online = snapshot.data ?? true;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Icon(
+                          online ? Icons.cloud_done : Icons.cloud_off,
+                          size: 14,
+                          color: online ? Colors.green : Colors.red,
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
               const VerticalDivider(width: 1),

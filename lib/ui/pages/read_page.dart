@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:logging/logging.dart';
 import '../../core/models/paper.dart';
+import '../../core/services/export_service.dart';
 import '../../main.dart';
 import '../widgets/explain_dialog.dart';
 
@@ -85,10 +88,16 @@ class _ReadPageState extends State<ReadPage> {
             onPressed: _summarize,
           ),
           IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: '打开原始 PDF',
+            onPressed: _openOriginalPdf,
+          ),
+          IconButton(
             icon: const Icon(Icons.font_download),
             tooltip: '字体大小',
             onPressed: _showFontSizePicker,
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: Column(
@@ -250,7 +259,12 @@ class _ReadPageState extends State<ReadPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: '导出',
+            onPressed: _showExportMenu,
+          ),
+          IconButton(
                   icon: _qaLoading
                       ? const SizedBox(
                           width: 16,
@@ -312,6 +326,81 @@ class _ReadPageState extends State<ReadPage> {
       }
     } catch (e) {
       _log.warning('summarize failed: $e');
+    }
+  }
+
+  void _showExportMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.description),
+              title: const Text('导出 Markdown'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _exportMarkdown();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bookmark),
+              title: const Text('导出 BibTeX 引用'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _exportBibtex();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportMarkdown() async {
+    final text = _getDisplayText();
+    if (text.isEmpty) return;
+    try {
+      await ExportService.exportMarkdown(widget.paper, text);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('导出成功')),
+        );
+      }
+    } catch (e) {
+      _log.warning('export failed: $e');
+    }
+  }
+
+  Future<void> _exportBibtex() async {
+    try {
+      await ExportService.exportBibtex(widget.paper);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('BibTeX 导出成功')),
+        );
+      }
+    } catch (e) {
+      _log.warning('export bibtex failed: $e');
+    }
+  }
+
+  Future<void> _openOriginalPdf() async {
+    final deps = Dependencies.of(context);
+    final pdfPath = deps.cacheService.pdfPath(widget.paper.id);
+    if (!await File(pdfPath).exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('原始 PDF 文件不存在')),
+        );
+      }
+      return;
+    }
+    try {
+      await Process.run('cmd', ['/c', 'start', '', pdfPath], runInShell: true);
+    } catch (e) {
+      _log.warning('open PDF failed: $e');
     }
   }
 

@@ -24,6 +24,7 @@ dependencies:
   synchronized: any
   syncfusion_flutter_pdf: any
   ffi: any
+  connectivity_plus: any
 
 dev_dependencies:
   flutter_test:
