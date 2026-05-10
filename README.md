@@ -1,57 +1,53 @@
-﻿# PaperPal
+﻿# ALICE PaperPal
 
-基于 [MinerU](https://github.com/opendatalab/MinerU) + DeepSeek V4 的论文辅助阅读桌面工具。
+**ALICE PaperPal** — 基于 MinerU + DeepSeek V4 的论文辅助阅读桌面工具。
 
-搜索论文、导入 PDF、自动解析、自动翻译、AI 问答与摘要。
+搜索论文、导入 PDF、自动解析、自动翻译、AI 问答与摘要。AI 伙伴会记住你的偏好和过往对话，像真人一样陪伴你阅读论文。
 
 ## 快速开始
 
-### 1. 环境要求
+### 下载安装
 
-- **Flutter SDK** 3.29+（[安装指南](https://docs.flutter.dev/get-started/install/windows)）
-- **Windows 10/11**
+从 [Releases](https://github.com/jonah791/alice-paperpal/releases) 下载最新版 `paperpal.exe`。
 
-### 2. 构建
+### 从源码构建
 
 ```bash
-# 克隆仓库
-git clone https://github.com/<user>/PaperPal.git
-cd PaperPal
-
-# 安装依赖
+git clone https://github.com/jonah791/alice-paperpal.git
+cd alice-paperpal
 flutter pub get
-
-# 构建 Windows EXE
 flutter build windows --release
 ```
 
-构建产物在 `build/windows/x64/runner/Release/PaperPal.exe`。
+构建产物在 `build/windows/x64/runner/Release/paperpal.exe`。
 
-### 3. 下载安装包
-
-从 [Releases](https://github.com/<user>/PaperPal/releases) 下载最新版 `PaperPal.exe`。
-
-### 4. 首次使用
+### 首次使用
 
 1. 双击运行
 2. 在设置页填入 DeepSeek API Key（[注册获取](https://platform.deepseek.com)）
-3. 搜索论文或上传 PDF
-4. 自动解析 + 自动翻译 → 开始阅读
+3. 选择或创建一个 AI 伙伴（灵魂）
+4. 搜索论文或上传 PDF
+5. 自动解析 + 自动翻译 → 开始阅读
 
 ## 功能
 
 | 功能 | 说明 |
 |---|---|
+| **AI 灵魂** | 预置 4 个角色（学术导师/代码专家/审稿人/科普达人），也可用自然语言创建自定义灵魂 |
+| **元灵魂** | 底层生命规则，让 AI 伙伴自然地引用过往、表达情绪、说"我不确定" |
+| **对话记忆** | 每次对话自动生成摘要，跨 session 注入，AI 伙伴记得你之前讨论过什么 |
+| **用户画像** | LLM 自动维护你的兴趣和偏好，你不需要做任何操作 |
+| **头像系统** | 内置默认头像 + 从相册选择，AI 伙伴有一个"脸" |
 | **论文搜索** | arXiv + Semantic Scholar 一键搜索，下载即解析 |
 | **本地上传** | 选择本地 PDF，自动解析 |
-| **URL 导入** | 粘贴 arXiv 链接，自动下载 |
+| **URL 导入** | 粘贴 arXiv 链接或 PDF 直链，自动下载 |
 | **PDF 文件关联** | 双击 .pdf 自动用 PaperPal 打开（运行 `windows/install_assoc.bat`） |
 | **自动解析** | MinerU 引擎：公式 → LaTeX、表格 → HTML、图片提取 |
 | **大 PDF 分批** | 超过 50 页自动分批，合并后无感 |
 | **自动翻译** | 非中文论文自动检测 + DeepSeek 全文翻译，原文/译文/对照三模式 |
-| **AI 问答** | 基于论文全文智能问答 |
+| **AI 问答** | 流式输出，逐字显示，基于灵魂+记忆+画像的个性化回答 |
 | **摘要生成** | 一句话 + 结构化摘要 |
-| **公式解释** | 选中公式 → AI 解读 |
+| **公式解释** | 点击公式 → AI 解读 |
 | **多论文对比** | 长按选择多篇论文 → AI 对比分析 |
 | **笔记系统** | 阅读时添加笔记，持久化保存 |
 | **导出** | Markdown / BibTeX 导出 |
@@ -61,7 +57,7 @@ flutter build windows --release
 ## 架构
 
 ```
-PaperPal (Flutter Desktop)
+ALICE PaperPal (Flutter Desktop)
     │
     ├── MinerU API       PDF → Markdown/LaTeX/HTML
     ├── DeepSeek V4 API  问答 / 翻译 / 摘要
@@ -74,12 +70,12 @@ PaperPal (Flutter Desktop)
 ## 项目结构
 
 ```
-PaperPal/
+paperpal/
 ├── lib/
 │   ├── main.dart                    # 入口 + Dependencies DI
 │   ├── core/
 │   │   ├── api/                     # 外部 API 客户端
-│   │   ├── models/                  # 数据模型（手写）
+│   │   ├── models/                  # 数据模型
 │   │   ├── services/                # 业务服务
 │   │   └── utils/                   # 工具
 │   └── ui/
@@ -109,8 +105,8 @@ PaperPal/
 - **解析:** MinerU API（可自部署）
 - **LLM:** DeepSeek V4 / OpenAI / Claude
 - **搜索:** arXiv + Semantic Scholar
-- **安全:** HTTPS 强制 / 加密 Key 存储 / 日志脱敏
-- **CI:** GitHub Actions (analyze → test → build)
+- **安全:** HTTPS 强制 / DPAPI 加密 Key 存储 / 日志脱敏
+- **CI:** GitHub Actions (analyze → test → build → release)
 
 ## 许可
 
