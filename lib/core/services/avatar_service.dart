@@ -44,12 +44,11 @@ class AvatarService {
     _log.info('pickFromGallery: avatar updated');
   }
 
-  Future<void> setBuiltin(int index) async {
-    // Remove custom avatar if exists
+  Future<void> setBuiltin() async {
     final current = File('$_avatarsDir/current.png');
     if (await current.exists()) await current.delete();
     _currentPath = null;
-    _log.info('setBuiltin: index=$index');
+    _log.info('setBuiltin: restored default');
   }
 
   bool get hasCustomAvatar => _currentPath != null;

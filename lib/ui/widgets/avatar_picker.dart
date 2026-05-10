@@ -58,7 +58,7 @@ class AvatarPicker extends StatelessWidget {
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () async {
-                      await deps.avatarService.setBuiltin(0);
+                      await deps.avatarService.setBuiltin();
                       (context as Element).markNeedsBuild();
                     },
                     child: const Text('恢复默认'),

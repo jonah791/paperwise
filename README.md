@@ -79,7 +79,7 @@ paperwise/
 │   ├── main.dart                    # 入口 + Dependencies DI
 │   ├── core/
 │   │   ├── api/                     # 外部 API 客户端
-│   │   ├── models/                  # 数据模型 (freezed)
+│   │   ├── models/                  # 数据模型（手写）
 │   │   ├── services/                # 业务服务
 │   │   └── utils/                   # 工具
 │   └── ui/
