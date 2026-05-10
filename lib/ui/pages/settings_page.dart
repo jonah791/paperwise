@@ -19,6 +19,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final _llmBaseController = TextEditingController();
   final _mineruKeyController = TextEditingController();
   bool _loading = true;
+  bool _loaded = false;
   String _mineruModelVersion = 'vlm';
   bool _enableFormula = true;
   bool _enableTable = true;
@@ -33,7 +34,15 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      _loadSettings();
+    }
   }
 
   Future<void> _loadSettings() async {
