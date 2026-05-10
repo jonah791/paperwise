@@ -25,7 +25,7 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: flutter test --coverage
+      - run: flutter test
 
   build:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -38,17 +38,24 @@ jobs:
           channel: stable
       - run: flutter pub get
       - run: flutter build windows --release
-      - name: Upload artifact
+      - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
           name: PaperWise-${{ github.ref_name }}
           path: build/windows/x64/runner/Release/
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             build/windows/x64/runner/Release/paperwise.exe
           body: |
-            PaperWise ${{ github.ref_name }}
+            Download PaperWise ${{ github.ref_name }}
             
-            下载 EXE 后双击运行，首次使用需在设置页配置 API Key。
+            PaperWise is an AI-powered paper reading assistant.
+            
+            ### Requirements
+            - Windows 10/11
+            - DeepSeek API Key (get at https://platform.deepseek.com)
+            
+            ### Changelog
+            See CHANGELOG.md for details.

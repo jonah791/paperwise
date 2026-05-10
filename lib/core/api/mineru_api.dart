@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
+import 'dio_client.dart';
 
 final _log = Logger('MineruApi');
 
@@ -24,16 +25,12 @@ class MineruApi {
   late final Dio _dio;
 
   MineruApi({required this.baseUrl, this.apiKey}) {
-    _dio = Dio(BaseOptions(
+    _dio = createApiClient(
+      baseUrl: '',
+      authToken: apiKey,
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 300),
-      sendTimeout: const Duration(seconds: 120),
-      headers: {
-        if (apiKey != null && apiKey!.isNotEmpty)
-          'Authorization': 'Bearer $apiKey',
-      },
-    ));
-    _dio.interceptors.add(_HttpsInterceptor());
+    );
   }
 
   Future<MineruResult> parsePdf({
@@ -108,21 +105,5 @@ class MineruApi {
       imagePaths: imagePaths,
       contentListJson: contentListJson ?? '',
     );
-  }
-}
-
-class _HttpsInterceptor extends Interceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final host = options.uri.host;
-    if (!host.contains('localhost') && options.uri.scheme != 'https') {
-      handler.reject(DioException(
-        requestOptions: options,
-        type: DioExceptionType.connectionError,
-        error: 'HTTPS is required for security',
-      ));
-      return;
-    }
-    handler.next(options);
   }
 }

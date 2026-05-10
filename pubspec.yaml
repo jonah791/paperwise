@@ -23,6 +23,7 @@ dependencies:
   uuid: any
   synchronized: any
   syncfusion_flutter_pdf: any
+  ffi: any
 
 dev_dependencies:
   flutter_test:

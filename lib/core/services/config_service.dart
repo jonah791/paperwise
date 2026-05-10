@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logging/logging.dart';
 import '../models/config.dart';
+import '../utils/windows_encryption.dart' as dpapi;
 
 final _log = Logger('ConfigService');
 
@@ -27,12 +30,25 @@ class ConfigService {
   }
 
   Future<void> saveLlmApiKey(String key) async {
-    await _prefs?.setString(_keyLlmApiKey, key);
-    _log.info('LLM API key saved');
+    final encrypted = dpapi.encrypt(key);
+    if (encrypted != null) {
+      await _prefs?.setString(_keyLlmApiKey, encrypted);
+      _log.info('LLM API key saved (encrypted)');
+    } else {
+      await _prefs?.setString(_keyLlmApiKey, key);
+      _log.warning('LLM API key saved (plaintext - DPAPI unavailable)');
+    }
   }
 
   Future<String?> readLlmApiKey() async {
-    return _prefs?.getString(_keyLlmApiKey);
+    final stored = _prefs?.getString(_keyLlmApiKey);
+    if (stored == null || stored.isEmpty) return null;
+
+    final decrypted = dpapi.decrypt(stored);
+    if (decrypted != null) return decrypted;
+
+    // If decryption fails, it might be an old plaintext key
+    return stored;
   }
 
   bool get hasLlmApiKey {
@@ -41,12 +57,24 @@ class ConfigService {
   }
 
   Future<void> saveMineruApiKey(String key) async {
-    await _prefs?.setString(_keyMineruApiKey, key);
-    _log.info('MinerU API key saved');
+    final encrypted = dpapi.encrypt(key);
+    if (encrypted != null) {
+      await _prefs?.setString(_keyMineruApiKey, encrypted);
+      _log.info('MinerU API key saved (encrypted)');
+    } else {
+      await _prefs?.setString(_keyMineruApiKey, key);
+      _log.warning('MinerU API key saved (plaintext - DPAPI unavailable)');
+    }
   }
 
   Future<String?> readMineruApiKey() async {
-    return _prefs?.getString(_keyMineruApiKey);
+    final stored = _prefs?.getString(_keyMineruApiKey);
+    if (stored == null || stored.isEmpty) return null;
+
+    final decrypted = dpapi.decrypt(stored);
+    if (decrypted != null) return decrypted;
+
+    return stored;
   }
 
   Future<void> updateConfig(AppConfig config) async {
@@ -54,7 +82,6 @@ class ConfigService {
     await _prefs?.setString(_keyLlmApiBase, config.llmApiBase);
     await _prefs?.setString(_keyLlmModel, config.llmModel);
     await _prefs?.setString(_keyMineruEndpoint, config.mineruApiEndpoint);
-    _log.info('Config updated: provider=${config.defaultProvider}, '
-        'model=${config.llmModel}');
+    _log.info('Config updated: provider=${config.defaultProvider}, model=${config.llmModel}');
   }
 }
