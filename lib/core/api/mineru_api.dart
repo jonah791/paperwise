@@ -86,10 +86,11 @@ class MineruApi {
     String? pageRanges,
     Duration pollTimeout = const Duration(minutes: 10),
   }) async {
+    final fileName = pdfFile.path.split(Platform.pathSeparator).last;
     final batchId = await _submitFileUpload(pdfFile, pageRanges: pageRanges);
     final task = await _pollBatch(batchId, timeout: pollTimeout);
     if (task.state == MineruTaskState.failed) {
-      throw Exception('Parse failed: ${task.errorMessage}');
+      throw Exception('MinerU parse failed for "$fileName": ${task.errorMessage ?? 'unknown error'}');
     }
     final tempDir = await Directory.systemTemp.createTemp('mineru_');
     return _downloadAndExtract(task.zipUrl!, tempDir.path);
@@ -161,8 +162,11 @@ class MineruApi {
       _log.info('submitFileUpload: batch_id=$batchId, file uploaded (${fileBytes.length} bytes)');
       return batchId;
     } on DioException catch (e) {
-      final msg = e.response?.data is Map ? (e.response!.data as Map)['msg'] ?? e.message : e.message;
-      throw Exception('MinerU upload failed: $msg (${e.response?.statusCode})');
+      final cause = e.error != null ? e.error.toString() : e.message;
+      final httpCode = e.response?.statusCode;
+      final apiMsg = (e.response?.data is Map) ? (e.response!.data as Map)['msg'] ?? '' : '';
+      final detail = [if (apiMsg.isNotEmpty) apiMsg, if (cause != null) cause].join('; ');
+      throw Exception('MinerU upload failed${httpCode != null ? ' (HTTP $httpCode)' : ''}: $detail');
     }
   }
 
@@ -244,13 +248,18 @@ class MineruApi {
 
   Future<MineruResult> _downloadAndExtract(String zipUrl, String outputDir) async {
     _log.info('downloadAndExtract: downloading $zipUrl');
-    final response = await _downloadDio.get(
-      zipUrl,
-      options: Options(responseType: ResponseType.bytes),
-    );
-    final bytes = response.data as List<int>;
-    _log.info('downloadAndExtract: ${bytes.length} bytes');
-    return _extractZip(bytes, outputDir);
+    try {
+      final response = await _downloadDio.get(
+        zipUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final bytes = response.data as List<int>;
+      _log.info('downloadAndExtract: ${bytes.length} bytes');
+      return _extractZip(bytes, outputDir);
+    } on DioException catch (e) {
+      final cause = e.error != null ? e.error.toString() : e.message;
+      throw Exception('MinerU download result failed (HTTP ${e.response?.statusCode}): $cause');
+    }
   }
 
   MineruResult _extractZip(List<int> bytes, String outputDir) {

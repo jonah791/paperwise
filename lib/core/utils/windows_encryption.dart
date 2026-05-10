@@ -92,7 +92,6 @@ String? encrypt(String plaintext) {
     if (encrypted == null) return null;
     return base64Encode(encrypted);
   } catch (e) {
-    _log.warning('encrypt failed: $e');
     return null;
   }
 }
@@ -128,7 +127,6 @@ String? decrypt(String ciphertext) {
     if (decrypted == null) return null;
     return String.fromCharCodes(decrypted);
   } catch (e) {
-    _log.warning('decrypt failed: $e');
     return null;
   }
 }
