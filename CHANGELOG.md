@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.2] - 2026-05-11
+
+### Fixed
+
+- **DPAPI 加密修复**：`GetProcessHeap` 和 `HeapFree` 从错误的 `crypt32.dll` 改为 `kernel32.dll`，Windows 加密功能现在可用
+- **下载 RangeError**：文件名清理后截取使用清理前长度导致越界，改为使用清理后长度
+- **错误消息改进**：MinerU API 失败时显示底层 `SocketException` 详情，不再显示 `null (null)`
+- **解析错误可见**：`Paper` 模型新增 `errorMessage` 字段，解析失败时存入具体原因供用户查看
+- **MinerU API 健壮性**：`_submitFileUpload` 和 `_pollBatch` 增加 `DioException` 捕获和重试
+- **DPAPI 日志静默**：加密不可用时不再输出 WARNING 日志
+
+### Changed
+
+- **测试框架重写**：从 27 个松散测试重构为 161 个结构化测试，覆盖模型序列化 / API 逻辑 / 服务纯逻辑
+- **ArxivApi 解析方法公开化**：`_parseXml`、`_extractTag` 等 5 个纯函数改为 package-visible，便于单元测试
+- **MineruApi 状态解析公开化**：`_parseState` 改为 package-visible
+
+### Added
+
+- **论文库筛选**：按状态（全部/已解析/已翻译/错误）过滤
+- **论文库删除**：支持单篇（右键菜单）和多选批量删除
+- **下载进度**：搜索页展示实时下载百分比
+- **设置页扩展**：MinerU 模型版本选择器（VLM/Pipeline/MinerU-HTML）+ 公式/表格识别开关
+- **配置文件扩展**：`AppConfig` 新增 `mineruModelVersion`、`enableFormula`、`enableTable`
+
 ## [0.1.1] - 2026-05-11
 
 ### Changed
