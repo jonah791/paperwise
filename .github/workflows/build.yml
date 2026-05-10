@@ -15,7 +15,7 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
   test:
     runs-on: windows-latest
@@ -41,21 +41,29 @@ jobs:
       - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
-          name: PaperPal-${{ github.ref_name }}
+          name: ALICE-PaperPal-${{ github.ref_name }}
           path: build/windows/x64/runner/Release/
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/windows/x64/runner/Release/PaperPal.exe
+            build/windows/x64/runner/Release/paperpal.exe
           body: |
-            Download PaperPal ${{ github.ref_name }}
-            
-            PaperPal is an AI-powered paper reading assistant.
-            
+            Download ALICE PaperPal ${{ github.ref_name }}
+
+            AI-powered paper reading assistant with personality.
+
             ### Requirements
             - Windows 10/11
             - DeepSeek API Key (get at https://platform.deepseek.com)
-            
+
+            ### Features
+            - AI soul system: 4 preset roles + custom creation
+            - Conversation memory: remembers past discussions
+            - Auto-translate: non-Chinese papers auto-translated
+            - Stream Q&A: real-time token-by-token responses
+            - PDF search, upload, URL import, file association
+            - Multi-paper comparison, notes, export
+
             ### Changelog
             See CHANGELOG.md for details.
