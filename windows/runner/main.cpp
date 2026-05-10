@@ -24,6 +24,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
+  // Set environment variable with first PDF arg for Dart to read
+  for (const auto& arg : command_line_arguments) {
+    if (arg.size() > 4 && arg.substr(arg.size() - 4) == ".pdf") {
+      ::SetEnvironmentVariableA("PAPERWISE_PDF_PATH", arg.c_str());
+      break;
+    }
+  }
+
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);

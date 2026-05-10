@@ -9,9 +9,8 @@ import 'core/services/cache_service.dart';
 import 'core/services/search_service.dart';
 import 'core/services/paper_service.dart';
 import 'core/services/network_service.dart';
-import 'core/models/config.dart';
-import 'core/services/network_service.dart';
 import 'core/services/note_service.dart';
+import 'core/models/config.dart';
 import 'core/utils/logger.dart';
 import 'ui/pages/search_page.dart';
 import 'ui/pages/library_page.dart';
@@ -63,6 +62,16 @@ void main() async {
   ]));
 
   final showWelcome = !configService.hasLlmApiKey;
+
+  // Check for PDF file passed via command line (file association)
+  String? pdfFileArg;
+  try {
+    final pdfPath = Platform.environment['PAPERWISE_PDF_PATH'];
+    if (pdfPath != null && pdfPath.isNotEmpty && File(pdfPath).existsSync()) {
+      pdfFileArg = pdfPath;
+    }
+  } catch (_) {}
+
   runApp(PaperWiseApp(
     configService: configService,
     paperService: paperService,
@@ -71,6 +80,7 @@ void main() async {
     networkService: networkService,
     noteService: noteService,
     showWelcome: showWelcome,
+    initialPdfPath: pdfFileArg,
   ));
 }
 
@@ -111,6 +121,7 @@ class PaperWiseApp extends StatefulWidget {
   final NetworkService networkService;
   final NoteService noteService;
   final bool showWelcome;
+  final String? initialPdfPath;
 
   const PaperWiseApp({
     super.key,
@@ -121,6 +132,7 @@ class PaperWiseApp extends StatefulWidget {
     required this.networkService,
     required this.noteService,
     this.showWelcome = false,
+    this.initialPdfPath,
   });
 
   @override
@@ -137,6 +149,21 @@ class _PaperWiseAppState extends State<PaperWiseApp> with TrayListener {
     _themeMode = widget.configService.config.themeMode.toFlutterThemeMode();
     _welcomeShown = !widget.showWelcome;
     trayManager.addListener(this);
+
+    // Import PDF from command-line argument (file association)
+    if (widget.initialPdfPath != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _importFromArg(widget.initialPdfPath!);
+      });
+    }
+  }
+
+  Future<void> _importFromArg(String path) async {
+    final file = File(path);
+    if (!await file.exists()) return;
+    await widget.paperService.importPdf(file);
+    _welcomeShown = true;
+    if (mounted) setState(() {});
   }
 
   @override

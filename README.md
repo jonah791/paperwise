@@ -21,9 +21,6 @@ cd paperwise
 # 安装依赖
 flutter pub get
 
-# 生成 freezed 代码
-dart run build_runner build --delete-conflicting-outputs
-
 # 构建 Windows EXE
 flutter build windows --release
 ```
@@ -48,14 +45,18 @@ flutter build windows --release
 | **论文搜索** | arXiv + Semantic Scholar 一键搜索，下载即解析 |
 | **本地上传** | 选择本地 PDF，自动解析 |
 | **URL 导入** | 粘贴 arXiv 链接，自动下载 |
+| **PDF 文件关联** | 双击 .pdf 自动用 PaperWise 打开（运行 `windows/install_assoc.bat`） |
 | **自动解析** | MinerU 引擎：公式 → LaTeX、表格 → HTML、图片提取 |
 | **大 PDF 分批** | 超过 50 页自动分批，合并后无感 |
 | **自动翻译** | 非中文论文自动检测 + DeepSeek 全文翻译，原文/译文/对照三模式 |
 | **AI 问答** | 基于论文全文智能问答 |
 | **摘要生成** | 一句话 + 结构化摘要 |
 | **公式解释** | 选中公式 → AI 解读 |
+| **多论文对比** | 长按选择多篇论文 → AI 对比分析 |
+| **笔记系统** | 阅读时添加笔记，持久化保存 |
+| **导出** | Markdown / BibTeX 导出 |
 | **暗黑模式** | 跟随系统 / 手动切换 |
-| **论文库** | 本地缓存历史论文 |
+| **论文库** | 本地缓存 + 持久化，重启不丢失 |
 
 ## 架构
 
