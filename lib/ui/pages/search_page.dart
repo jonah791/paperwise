@@ -255,15 +255,28 @@ class _SearchPageState extends State<SearchPage> {
 
     if (_results.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 16),
-            Text('输入关键词开始搜索论文', style: theme.textTheme.bodyLarge),
-            const SizedBox(height: 8),
-            Text('或点击"上传 PDF"导入本地论文', style: theme.textTheme.bodySmall),
-          ],
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 500),
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 10 * (1 - value)),
+                child: child,
+              ),
+            );
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.search_off, size: 64, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(height: 16),
+              Text('输入关键词开始搜索论文', style: theme.textTheme.bodyLarge),
+              const SizedBox(height: 8),
+              Text('或点击"上传 PDF"导入本地论文', style: theme.textTheme.bodySmall),
+            ],
+          ),
         ),
       );
     }
@@ -271,7 +284,20 @@ class _SearchPageState extends State<SearchPage> {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _results.length,
-      itemBuilder: (context, index) => _buildResultCard(_results[index], theme),
+      itemBuilder: (context, index) => TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 500),
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(0, 10 * (1 - value)),
+              child: child,
+            ),
+          );
+        },
+        child: _buildResultCard(_results[index], theme),
+      ),
     );
   }
 
