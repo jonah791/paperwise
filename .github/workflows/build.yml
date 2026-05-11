@@ -85,14 +85,19 @@ jobs:
           channel: stable
       - run: flutter pub get
 
-      - run: flutter build apk --release
+      - run: flutter build apk --release --split-per-abi
 
-      - name: Upload APK to Release
+      - name: Upload APKs to Release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload ${{ github.ref_name }} build/app/outputs/flutter-apk/app-release.apk --clobber
+          for apk in build/app/outputs/flutter-apk/*.apk; do
+            basename=$(basename "$apk")
+            # Rename to include version tag
+            cp "$apk" "paperpal-${{ github.ref_name }}-$basename"
+          done
+          gh release upload ${{ github.ref_name }} paperpal-*.apk --clobber
 
       - name: Update Release body
         shell: bash
@@ -106,7 +111,8 @@ jobs:
           - \`ALICE-PaperPal-${{ github.ref_name }}.zip\` — 便携版
 
           **Android:**
-          - \`app-release.apk\` — Android APK
+          - \`paperpal-${{ github.ref_name }}-app-arm64-v8a-release.apk\` — ARM64（主流手机，~25MB）
+          - \`paperpal-${{ github.ref_name }}-app-armeabi-v7a-release.apk\` — 32位（老旧设备）
 
           AI-powered paper reading assistant with personality.
 

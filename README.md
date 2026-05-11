@@ -64,7 +64,7 @@
 
 ### Android
 
-从 Releases 下载 `app-release.apk`，安装到 Android 7.0+ 设备。
+从 [Releases](https://github.com/jonah791/alice-paperpal/releases) 下载 `paperpal-v*-app-arm64-v8a-release.apk`（约 25MB），安装到 Android 7.0+ 设备。
 
 ### CLI（无需 GUI，适合脚本/服务器环境）
 

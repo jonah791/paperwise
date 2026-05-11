@@ -528,7 +528,10 @@ flutter build windows --release
 flutter build apk --release
 ```
 
-产物：`build/app/outputs/flutter-apk/app-release.apk`
+产物：`build/app/outputs/flutter-apk/app-arm64-v8a-release.apk`（约 25MB，推荐）<br>
+其他 ABI：`app-armeabi-v7a-release.apk`（32位）、`app-x86_64-release.apk`（模拟器）
+
+> APK 体积从 59.8MB 降至约 25MB（arm64-v8a），得益于 ABI 拆分 + R8 压缩。`--split-per-abi` 按 CPU 架构分别打包，去掉无用原生库。
 
 ### 5.2 构建 Inno Setup 安装包（本地）
 
@@ -574,7 +577,8 @@ master push / tag v* ── test (flutter test)
 **构建产物：**
 - `ALICE-PaperPal-v{version}.zip` — Windows 便携版，解压即用
 - `ALICE-PaperPal-v{version}-Setup.exe` — Windows 安装包，含 PDF 文件关联
-- `app-release.apk` — Android APK（v0.3.0+）
+- `paperpal-v{version}-app-arm64-v8a-release.apk` — Android ARM64（主流手机，约 25MB）
+- `paperpal-v{version}-app-armeabi-v7a-release.apk` — Android 32位（老旧设备）
 
 **注意：** Release 需要 `permissions: contents: write` 权限，已经在 workflow 中配置。
 
