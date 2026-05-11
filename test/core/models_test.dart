@@ -4,6 +4,7 @@ import 'package:paperpal/core/models/paper.dart';
 import 'package:paperpal/core/models/parse_result.dart';
 import 'package:paperpal/core/models/search_result.dart';
 import 'package:paperpal/core/models/config.dart';
+import 'package:paperpal/ui/theme/app_theme.dart';
 import 'package:paperpal/core/models/app_error.dart';
 import 'package:paperpal/core/models/soul.dart';
 import 'package:paperpal/core/models/note.dart';

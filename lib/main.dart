@@ -22,6 +22,7 @@ import 'ui/pages/library_page.dart';
 import 'ui/pages/settings_page.dart';
 import 'ui/pages/welcome_page.dart';
 import 'ui/theme/app_theme.dart';
+import 'ui/widgets/avatar_helpers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -235,7 +236,7 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
         SnackBar(
           content: Row(
             children: [
-              widget.avatarService.buildDefaultAvatar(soul.name, 20),
+              buildDefaultAvatar(soul.name, 20, widget.avatarService.colorForName(soul.name)),
               const SizedBox(width: 8),
               Expanded(child: Text(greeting, style: const TextStyle(fontSize: 13))),
             ],

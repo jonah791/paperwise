@@ -1,16 +1,4 @@
-import 'package:flutter/material.dart' as m;
-
 enum AppThemeMode { system, light, dark }
-
-extension AppThemeModeX on AppThemeMode {
-  m.ThemeMode toFlutterThemeMode() {
-    return switch (this) {
-      AppThemeMode.system => m.ThemeMode.system,
-      AppThemeMode.light => m.ThemeMode.light,
-      AppThemeMode.dark => m.ThemeMode.dark,
-    };
-  }
-}
 
 class AppConfig {
   final String defaultProvider;

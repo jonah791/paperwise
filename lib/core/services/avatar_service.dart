@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/material.dart';
 
 final _log = Logger('AvatarService');
 
@@ -11,13 +9,18 @@ class AvatarService {
   late final String _avatarsDir;
   String? _currentPath;
 
-  static const _builtinColors = [
-    Color(0xFF1565C0),
-    Color(0xFF2E7D32),
-    Color(0xFFE65100),
-    Color(0xFF6A1B9A),
-    Color(0xFFC62828),
+  static const _builtinColors = <int>[
+    0xFF1565C0,
+    0xFF2E7D32,
+    0xFFE65100,
+    0xFF6A1B9A,
+    0xFFC62828,
   ];
+
+  int colorForName(String name) {
+    final hash = name.hashCode.abs();
+    return _builtinColors[hash % _builtinColors.length];
+  }
 
   Future<void> init() async {
     final dir = await getApplicationSupportDirectory();
@@ -33,42 +36,19 @@ class AvatarService {
 
   String? get currentPath => _currentPath;
 
-  Future<void> pickFromGallery() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 256, maxHeight: 256);
-    if (image == null) return;
+  bool get hasCustomAvatar => _currentPath != null;
+  String get storageDir => _avatarsDir;
 
+  Future<void> setAvatarFromPath(String sourcePath) async {
     final dest = File('$_avatarsDir/current.png');
-    await File(image.path).copy(dest.path);
+    await File(sourcePath).copy(dest.path);
     _currentPath = dest.path;
-    _log.info('pickFromGallery: avatar updated');
   }
 
-  Future<void> setBuiltin() async {
+  Future<void> deleteBuiltin() async {
     final current = File('$_avatarsDir/current.png');
     if (await current.exists()) await current.delete();
     _currentPath = null;
     _log.info('setBuiltin: restored default');
-  }
-
-  bool get hasCustomAvatar => _currentPath != null;
-
-  Widget buildDefaultAvatar(String name, double size) {
-    final char = name.isNotEmpty ? name.characters.first : '?';
-    final hash = name.hashCode.abs();
-    final color = _builtinColors[hash % _builtinColors.length];
-
-    return CircleAvatar(
-      radius: size / 2,
-      backgroundColor: color,
-      child: Text(
-        char,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: size * 0.45,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
   }
 }

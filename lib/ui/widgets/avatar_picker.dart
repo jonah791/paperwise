@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/services/avatar_service.dart';
 import '../../main.dart';
+import 'avatar_helpers.dart';
 
 class AvatarPicker extends StatelessWidget {
   const AvatarPicker({super.key});
@@ -34,7 +36,7 @@ class AvatarPicker extends StatelessWidget {
                     ),
                   )
                 else
-                  deps.avatarService.buildDefaultAvatar(soul.name, 64),
+                  buildDefaultAvatar(soul.name, 64, deps.avatarService.colorForName(soul.name)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -48,7 +50,10 @@ class AvatarPicker extends StatelessWidget {
                 ),
                 OutlinedButton.icon(
                   onPressed: () async {
-                    await deps.avatarService.pickFromGallery();
+                    final picker = ImagePicker();
+                    final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 256, maxHeight: 256);
+                    if (image == null) return;
+                    await deps.avatarService.setAvatarFromPath(image.path);
                     (context as Element).markNeedsBuild();
                   },
                   icon: const Icon(Icons.photo_library, size: 16),
@@ -58,7 +63,7 @@ class AvatarPicker extends StatelessWidget {
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () async {
-                      await deps.avatarService.setBuiltin();
+                      await deps.avatarService.deleteBuiltin();
                       (context as Element).markNeedsBuild();
                     },
                     child: const Text('恢复默认'),

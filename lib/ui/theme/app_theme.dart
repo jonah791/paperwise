@@ -1,4 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../core/models/config.dart';
+
+extension AppThemeModeX on AppThemeMode {
+  ThemeMode toFlutterThemeMode() {
+    return switch (this) {
+      AppThemeMode.system => ThemeMode.system,
+      AppThemeMode.light => ThemeMode.light,
+      AppThemeMode.dark => ThemeMode.dark,
+    };
+  }
+}
 
 class AppTheme {
   static final ThemeData light = ThemeData(
