@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logging/logging.dart';
 import '../models/config.dart';
 import '../utils/windows_encryption.dart' as dpapi;
+import 'platform_service.dart';
 
 final _log = Logger('ConfigService');
 
@@ -17,10 +18,14 @@ class ConfigService {
   static const _keyEnableFormula = 'enable_formula';
   static const _keyEnableTable = 'enable_table';
 
+  final PlatformService _platform;
   AppConfig _config = const AppConfig();
   SharedPreferences? _prefs;
 
+  ConfigService(this._platform);
+
   AppConfig get config => _config;
+  PlatformService get platform => _platform;
 
   Future<void> load() async {
     _prefs = await SharedPreferences.getInstance();
@@ -36,24 +41,18 @@ class ConfigService {
   }
 
   Future<void> saveLlmApiKey(String key) async {
-    final encrypted = dpapi.encrypt(key);
-    if (encrypted != null) {
-      await _prefs?.setString(_keyLlmApiKey, encrypted);
-      _log.info('LLM API key saved (encrypted)');
-    } else {
-      await _prefs?.setString(_keyLlmApiKey, key);
-      _log.warning('LLM API key saved (plaintext - DPAPI unavailable)');
-    }
+    final encrypted = await _platform.encrypt(key);
+    await _prefs?.setString(_keyLlmApiKey, encrypted);
+    _log.info('LLM API key saved');
   }
 
   Future<String?> readLlmApiKey() async {
     final stored = _prefs?.getString(_keyLlmApiKey);
     if (stored == null || stored.isEmpty) return null;
 
-    final decrypted = dpapi.decrypt(stored);
-    if (decrypted != null) return decrypted;
+    final decrypted = await _platform.decrypt(stored);
+    if (decrypted != null && decrypted.isNotEmpty && decrypted != stored) return decrypted;
 
-    // If decryption fails, it might be an old plaintext key
     return stored;
   }
 
@@ -63,22 +62,17 @@ class ConfigService {
   }
 
   Future<void> saveMineruApiKey(String key) async {
-    final encrypted = dpapi.encrypt(key);
-    if (encrypted != null) {
-      await _prefs?.setString(_keyMineruApiKey, encrypted);
-      _log.info('MinerU API key saved (encrypted)');
-    } else {
-      await _prefs?.setString(_keyMineruApiKey, key);
-      _log.warning('MinerU API key saved (plaintext - DPAPI unavailable)');
-    }
+    final encrypted = await _platform.encrypt(key);
+    await _prefs?.setString(_keyMineruApiKey, encrypted);
+    _log.info('MinerU API key saved');
   }
 
   Future<String?> readMineruApiKey() async {
     final stored = _prefs?.getString(_keyMineruApiKey);
     if (stored == null || stored.isEmpty) return null;
 
-    final decrypted = dpapi.decrypt(stored);
-    if (decrypted != null) return decrypted;
+    final decrypted = await _platform.decrypt(stored);
+    if (decrypted != null && decrypted.isNotEmpty && decrypted != stored) return decrypted;
 
     return stored;
   }

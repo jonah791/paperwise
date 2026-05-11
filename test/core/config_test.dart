@@ -1,23 +1,35 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:paperpal/core/services/config_service.dart';
+import 'package:paperpal/core/services/platform_service.dart';
 import 'package:paperpal/core/models/config.dart';
+
+class _TestPlatform implements PlatformService {
+  @override Future<String> encrypt(String p) async => p;
+  @override Future<String?> decrypt(String c) async => c;
+  @override Future<void> openFile(String p) async {}
+  @override Future<String> get dataPath async => '/tmp';
+  @override bool get isDesktop => false;
+  @override bool get isAndroid => false;
+}
+
+PlatformService _p() => _TestPlatform();
 
 void main() {
   group('ConfigService', () {
     test('default config before load', () {
-      final s = ConfigService();
+      final s = ConfigService(_p());
       expect(s.config.llmApiBase, 'https://api.deepseek.com');
       expect(s.config.mineruModelVersion, 'vlm');
     });
 
     test('hasLlmApiKey false before load', () {
-      expect(ConfigService().hasLlmApiKey, false);
+      expect(ConfigService(_p()).hasLlmApiKey, false);
     });
 
     test('load empty prefs uses defaults', () async {
       SharedPreferences.setMockInitialValues({});
-      final s = ConfigService();
+      final s = ConfigService(_p());
       await s.load();
       expect(s.config.llmApiBase, 'https://api.deepseek.com');
       expect(s.config.llmModel, 'deepseek-v4-flash');
@@ -34,7 +46,7 @@ void main() {
         'enable_formula': false,
         'enable_table': true,
       });
-      final s = ConfigService();
+      final s = ConfigService(_p());
       await s.load();
       expect(s.config.llmApiBase, 'https://custom.api.com');
       expect(s.config.llmModel, 'gpt-4');
@@ -45,7 +57,7 @@ void main() {
 
     test('updateConfig persists to SharedPreferences', () async {
       SharedPreferences.setMockInitialValues({});
-      final s = ConfigService();
+      final s = ConfigService(_p());
       await s.load();
       await s.updateConfig(AppConfig(
         llmApiBase: 'https://new.api.com',
@@ -62,7 +74,7 @@ void main() {
 
     test('saveLlmApiKey and readLlmApiKey round-trip', () async {
       SharedPreferences.setMockInitialValues({});
-      final s = ConfigService();
+      final s = ConfigService(_p());
       await s.load();
       await s.saveLlmApiKey('sk-test-key-12345');
       final read = await s.readLlmApiKey();
@@ -71,7 +83,7 @@ void main() {
 
     test('saveMineruApiKey and readMineruApiKey round-trip', () async {
       SharedPreferences.setMockInitialValues({});
-      final s = ConfigService();
+      final s = ConfigService(_p());
       await s.load();
       await s.saveMineruApiKey('mn-test-key');
       final read = await s.readMineruApiKey();
@@ -80,7 +92,7 @@ void main() {
 
     test('hasLlmApiKey true after save', () async {
       SharedPreferences.setMockInitialValues({});
-      final s = ConfigService();
+      final s = ConfigService(_p());
       await s.load();
       await s.saveLlmApiKey('k');
       expect(s.hasLlmApiKey, true);
@@ -88,7 +100,7 @@ void main() {
 
     test('readLlmApiKey returns null when empty', () async {
       SharedPreferences.setMockInitialValues({});
-      final s = ConfigService();
+      final s = ConfigService(_p());
       await s.load();
       expect(await s.readLlmApiKey(), isNull);
     });

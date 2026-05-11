@@ -1,4 +1,4 @@
-﻿name: paperpal
+name: paperpal
 description: AI-powered paper reading assistant.
 publish_to: 'none'
 version: 0.2.0
@@ -26,6 +26,8 @@ dependencies:
   connectivity_plus: any
   image_picker: any
   google_fonts: any
+  flutter_secure_storage: ^10.1.0
+  open_filex: ^4.7.0
 
 dev_dependencies:
   flutter_test:

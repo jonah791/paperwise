@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'core/services/platform_service.dart';
 import 'core/services/config_service.dart';
 import 'core/services/cache_service.dart';
 import 'core/services/search_service.dart';
@@ -26,10 +27,15 @@ import 'ui/widgets/animated_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
+
+  final platform = createPlatformService();
+
+  if (!platform.isAndroid) {
+    await windowManager.ensureInitialized();
+  }
 
   await initLogger();
-  final configService = ConfigService();
+  final configService = ConfigService(platform);
   await configService.load();
 
   final cacheService = CacheService();
@@ -73,32 +79,36 @@ void main() async {
   final noteService = NoteService();
   await noteService.init();
 
-  await windowManager.waitUntilReadyToShow();
-  await windowManager.setTitle('PaperPal');
-  await windowManager.setMinimumSize(const Size(1024, 700));
-  await windowManager.setSize(const Size(1280, 860));
-  await windowManager.center();
-  await windowManager.show();
+  if (!platform.isAndroid) {
+    await windowManager.waitUntilReadyToShow();
+    await windowManager.setTitle('PaperPal');
+    await windowManager.setMinimumSize(const Size(1024, 700));
+    await windowManager.setSize(const Size(1280, 860));
+    await windowManager.center();
+    await windowManager.show();
 
-  await trayManager.setToolTip('PaperPal');
-  if (await File('resources/icon.ico').exists()) {
-    await trayManager.setIcon('resources/icon.ico', iconSize: 32);
+    await trayManager.setToolTip('PaperPal');
+    if (await File('resources/icon.ico').exists()) {
+      await trayManager.setIcon('resources/icon.ico', iconSize: 32);
+    }
+    await trayManager.setContextMenu(Menu(items: [
+      MenuItem(key: 'show', label: '显示'),
+      MenuItem.separator(),
+      MenuItem(key: 'quit', label: '退出'),
+    ]));
   }
-  await trayManager.setContextMenu(Menu(items: [
-    MenuItem(key: 'show', label: '显示'),
-    MenuItem.separator(),
-    MenuItem(key: 'quit', label: '退出'),
-  ]));
 
   final showWelcome = !configService.hasLlmApiKey;
 
   String? pdfFileArg;
-  try {
-    final pdfPath = Platform.environment['PAPERPAL_PDF_PATH'];
-    if (pdfPath != null && pdfPath.isNotEmpty && File(pdfPath).existsSync()) {
-      pdfFileArg = pdfPath;
-    }
-  } catch (_) {}
+  if (!platform.isAndroid) {
+    try {
+      final pdfPath = Platform.environment['PAPERPAL_PDF_PATH'];
+      if (pdfPath != null && pdfPath.isNotEmpty && File(pdfPath).existsSync()) {
+        pdfFileArg = pdfPath;
+      }
+    } catch (_) {}
+  }
 
   runApp(PaperPalApp(
     configService: configService,
@@ -201,7 +211,9 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
     super.initState();
     _themeMode = widget.configService.config.themeMode.toFlutterThemeMode();
     _welcomeShown = !widget.showWelcome;
-    trayManager.addListener(this);
+    if (!widget.configService.platform.isAndroid) {
+      trayManager.addListener(this);
+    }
 
     if (widget.initialPdfPath != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -209,7 +221,6 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
       });
     }
 
-    // Startup greeting
     WidgetsBinding.instance.addPostFrameCallback((_) => _startupGreeting());
   }
 
@@ -222,7 +233,6 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
   }
 
   Future<void> _startupGreeting() async {
-    // Wait a moment for UI to settle
     await Future.delayed(const Duration(milliseconds: 800));
     final memories = widget.memoryService.getRecent(limit: 1);
     if (memories.isEmpty) return;
@@ -250,7 +260,9 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
 
   @override
   void dispose() {
-    trayManager.removeListener(this);
+    if (!widget.configService.platform.isAndroid) {
+      trayManager.removeListener(this);
+    }
     super.dispose();
   }
 
@@ -341,13 +353,44 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      windowManager.show();
+      final platform = Dependencies.of(context).configService.platform;
+      if (!platform.isAndroid) {
+        windowManager.show();
+      }
     }
   }
+
+  bool get _isMobile =>
+      WidgetsBinding.instance.platformDispatcher.views.any(
+        (v) => v.physicalSize.shortestSide < 600 * v.devicePixelRatio,
+      );
 
   @override
   Widget build(BuildContext context) {
     final network = Dependencies.of(context).networkService;
+    final platform = Dependencies.of(context).configService.platform;
+    final isMobile = _isMobile;
+
+    if (isMobile) {
+      return Scaffold(
+        body: AnimatedBackground(
+          child: IndexedStack(
+            index: _currentIndex,
+            children: _pages,
+          ),
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (i) => setState(() => _currentIndex = i),
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.search), label: '搜索'),
+            NavigationDestination(icon: Icon(Icons.library_books), label: '论文库'),
+            NavigationDestination(icon: Icon(Icons.settings), label: '设置'),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       body: AnimatedBackground(
         child: CallbackShortcuts(
@@ -355,11 +398,12 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
           const SingleActivator(LogicalKeyboardKey.keyS, control: true): () => setState(() => _currentIndex = 0),
           const SingleActivator(LogicalKeyboardKey.keyL, control: true): () => setState(() => _currentIndex = 1),
           const SingleActivator(LogicalKeyboardKey.keyP, control: true): () => setState(() => _currentIndex = 2),
-          const SingleActivator(LogicalKeyboardKey.keyQ, control: true): () => windowManager.close(),
+          if (!platform.isAndroid)
+            const SingleActivator(LogicalKeyboardKey.keyQ, control: true): () => windowManager.close(),
         },
         child: Focus(
           focusNode: _focusNode,
-          autofocus: true,
+          autofocus: !isMobile,
           child: Row(
             children: [
               Column(
