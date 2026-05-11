@@ -100,8 +100,8 @@ class _ExplainDialogContentState extends State<_ExplainDialogContent> {
     final theme = Theme.of(context);
     return AlertDialog(
       title: Text(widget.isTable ? '表格解读' : '公式解释'),
-      content: SizedBox(
-        width: 560,
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -178,7 +178,8 @@ class _SearchPageState extends State<SearchPage> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Row(
+          child: Wrap(
+            runSpacing: 8,
             children: [
               Expanded(
                 child: TextField(
