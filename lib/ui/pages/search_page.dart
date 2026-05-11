@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 import '../../core/models/search_result.dart';
 import '../../core/models/paper.dart';
 import '../../main.dart';
+import '../widgets/card_spinner.dart';
 
 final _log = Logger('SearchPage');
 
@@ -196,7 +197,7 @@ class _SearchPageState extends State<SearchPage> {
               FilledButton.icon(
                 onPressed: _loading ? null : _search,
                 icon: _loading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: 24, height: 24, child: CardSpinner(size: 24))
                     : const Icon(Icons.search),
                 label: const Text('搜索'),
               ),
@@ -249,7 +250,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildBody(ThemeData theme) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CardSpinner());
     }
 
     if (_results.isEmpty) {
