@@ -65,6 +65,36 @@ class _ReadPageState extends State<ReadPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final platform = Dependencies.of(context).configService.platform;
+
+    if (platform.isAndroid && _showNotes) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (ctx) => DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.3,
+              maxChildSize: 0.85,
+              expand: false,
+              builder: (ctx, scrollController) => Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text('笔记', style: theme.textTheme.titleMedium),
+                  ),
+                  const Divider(),
+                  Expanded(child: _buildNotesPanel(theme)),
+                ],
+              ),
+            ),
+          ).then((_) {
+            if (mounted) setState(() => _showNotes = false);
+          });
+        }
+      });
+    }
 
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -78,10 +108,11 @@ class _ReadPageState extends State<ReadPage> {
         actions: [
           if (_translation != null)
             SegmentedButton<_ViewMode>(
-              segments: const [
+              segments: [
                 ButtonSegment(value: _ViewMode.original, label: Text('原文')),
                 ButtonSegment(value: _ViewMode.translated, label: Text('译文')),
-                ButtonSegment(value: _ViewMode.sideBySide, label: Text('对照')),
+                if (!platform.isAndroid)
+                  ButtonSegment(value: _ViewMode.sideBySide, label: Text('对照')),
               ],
               selected: {_viewMode},
               onSelectionChanged: (v) => setState(() => _viewMode = v.first),
@@ -91,26 +122,50 @@ class _ReadPageState extends State<ReadPage> {
               ),
             ),
           const SizedBox(width: 16),
-          IconButton(
-            icon: const Icon(Icons.summarize),
-            tooltip: '生成摘要',
-            onPressed: _summarize,
-          ),
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            tooltip: '打开原始 PDF',
-            onPressed: _openOriginalPdf,
-          ),
-          IconButton(
-            icon: const Icon(Icons.font_download),
-            tooltip: '字体大小',
-            onPressed: _showFontSizePicker,
-          ),
-          IconButton(
-            icon: Icon(_showNotes ? Icons.notes : Icons.note_add_outlined),
-            tooltip: '笔记',
-            onPressed: () => setState(() => _showNotes = !_showNotes),
-          ),
+          if (platform.isAndroid) ...[
+            IconButton(
+              icon: const Icon(Icons.font_download),
+              tooltip: '字体大小',
+              onPressed: _showFontSizePicker,
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'summary': _summarize();
+                  case 'export': _showExportMenu();
+                  case 'pdf': _openOriginalPdf();
+                  case 'notes': setState(() => _showNotes = !_showNotes);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'summary', child: Text('摘要')),
+                const PopupMenuItem(value: 'export', child: Text('导出')),
+                const PopupMenuItem(value: 'pdf', child: Text('打开 PDF')),
+                const PopupMenuItem(value: 'notes', child: Text('笔记')),
+              ],
+            ),
+          ] else ...[
+            IconButton(
+              icon: const Icon(Icons.summarize),
+              tooltip: '生成摘要',
+              onPressed: _summarize,
+            ),
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf),
+              tooltip: '打开原始 PDF',
+              onPressed: _openOriginalPdf,
+            ),
+            IconButton(
+              icon: const Icon(Icons.font_download),
+              tooltip: '字体大小',
+              onPressed: _showFontSizePicker,
+            ),
+            IconButton(
+              icon: Icon(_showNotes ? Icons.notes : Icons.note_add_outlined),
+              tooltip: '笔记',
+              onPressed: () => setState(() => _showNotes = !_showNotes),
+            ),
+          ],
           const SizedBox(width: 4),
         ],
       ),
@@ -133,7 +188,7 @@ class _ReadPageState extends State<ReadPage> {
                             )
                           : _buildContent(theme, displayText, controller: _scrollController),
                     ),
-                    if (_showNotes)
+                    if (_showNotes && !platform.isAndroid)
                       SizedBox(
                         width: 280,
                         child: _buildNotesPanel(theme),
@@ -484,7 +539,7 @@ class _ReadPageState extends State<ReadPage> {
       return;
     }
     try {
-      await Process.run('cmd', ['/c', 'start', '', pdfPath], runInShell: true);
+      await Dependencies.of(context).configService.platform.openFile(pdfPath);
     } catch (e) {
       _log.warning('open PDF failed: $e');
     }
