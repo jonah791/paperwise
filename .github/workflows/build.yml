@@ -27,7 +27,7 @@ jobs:
       - run: flutter pub get
       - run: flutter test
 
-  build:
+  deploy-windows:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [analyze, test]
     runs-on: windows-latest
@@ -39,13 +39,6 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - name: Get version
-        id: version
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          $ver = $tag -replace '^v', ''
-          echo "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - run: flutter build windows --release
 
@@ -61,18 +54,25 @@ jobs:
       - name: Build installer
         shell: pwsh
         run: |
-          $ver = "${{ steps.version.outputs.version }}"
-          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" windows\installer.iss /DMyAppVersion=$ver
+          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" windows\installer.iss /DMyAppVersion=${{ github.ref_name }}
 
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ALICE-PaperPal-Windows-${{ github.ref_name }}
-          path: |
-            build/windows/x64/runner/Release/ALICE-PaperPal-*.zip
+      - name: Create Release and upload Windows assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release create $tag --title $tag `
+            --notes "Download ALICE PaperPal $tag
+
+          **Windows:** Setup.exe + ZIP 便携版
+          **Android:** APK (separate job)
+
+          AI-powered paper reading assistant with personality." `
+            build/windows/x64/runner/Release/ALICE-PaperPal-*.zip `
             build/installer/ALICE-PaperPal-*-Setup.exe
 
-  build-android:
+  deploy-android:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [analyze, test]
     runs-on: ubuntu-latest
@@ -87,54 +87,40 @@ jobs:
 
       - run: flutter build apk --release
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ALICE-PaperPal-APK-${{ github.ref_name }}
-          path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Upload APK to Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload ${{ github.ref_name }} build/app/outputs/flutter-apk/app-release.apk --clobber
 
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build, build-android]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: ALICE-PaperPal-*
-          merge-multiple: true
+      - name: Update Release body
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit ${{ github.ref_name }} --notes "Download ALICE PaperPal ${{ github.ref_name }}
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ALICE-PaperPal-*.zip
-            ALICE-PaperPal-*-Setup.exe
-            app-release.apk
-          body: |
-            Download ALICE PaperPal ${{ github.ref_name }}
+          **Windows:**
+          - \`ALICE-PaperPal-${{ github.ref_name }}-Setup.exe\` — 安装包
+          - \`ALICE-PaperPal-${{ github.ref_name }}.zip\` — 便携版
 
-            **Windows:**
-            - `ALICE-PaperPal-*-Setup.exe` — 安装包（推荐）
-            - `ALICE-PaperPal-*.zip` — 便携版（解压即用）
+          **Android:**
+          - \`app-release.apk\` — Android APK
 
-            **Android:**
-            - `app-release.apk` — Android APK
+          AI-powered paper reading assistant with personality.
 
-            AI-powered paper reading assistant with personality.
+          ### Requirements
+          - Windows 10/11
+          - Android 7.0+ (API 24+)
+          - DeepSeek API Key (get at https://platform.deepseek.com)
 
-            ### Requirements
-            - Windows 10/11
-            - Android 7.0+ (API 24+)
-            - DeepSeek API Key (get at https://platform.deepseek.com)
-
-            ### Features
-            - AI soul system: 4 preset roles + custom creation
-            - Conversation memory: remembers past discussions
-            - Auto-translate: non-Chinese papers auto-translated
-            - Stream Q&A: real-time token-by-token responses
-            - PDF search, upload, URL import, file association
-            - Multi-paper comparison, notes, export
-            - Alice in Wonderland themed UI (v0.2.0+)
-            - Android mobile support (v0.3.0+)
+          ### Features
+          - AI soul system: 4 preset roles + custom creation
+          - Conversation memory: remembers past discussions
+          - Auto-translate: non-Chinese papers auto-translated
+          - Stream Q&A: real-time token-by-token responses
+          - PDF search, upload, URL import, file association
+          - Multi-paper comparison, notes, export
+          - Alice in Wonderland themed UI (v0.2.0+)
+          - Android mobile support (v0.3.0+)"
