@@ -8,6 +8,7 @@ import '../../core/models/note.dart';
 import '../../core/services/export_service.dart';
 import '../../main.dart';
 import '../widgets/explain_dialog.dart';
+import '../widgets/avatar_helpers.dart';
 
 final _log = Logger('ReadPage');
 
@@ -253,7 +254,7 @@ class _ReadPageState extends State<ReadPage> {
                       if (!isUser)
                         Padding(
                           padding: const EdgeInsets.only(right: 6, top: 2),
-                          child: deps.avatarService.buildDefaultAvatar(soul.name, 20),
+                          child: buildDefaultAvatar(soul.name, 20, deps.avatarService.colorForName(soul.name)),
                         ),
                       Flexible(
                         child: Container(

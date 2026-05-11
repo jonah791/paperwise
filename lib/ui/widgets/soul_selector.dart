@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import '../../core/models/soul.dart';
 import '../../core/services/soul_service.dart';
 import '../../main.dart';
+import 'avatar_helpers.dart';
 
 final _log = Logger('SoulSelector');
 
@@ -31,7 +32,7 @@ class _SoulSelectorState extends State<SoulSelector> {
           children: [
             Row(
               children: [
-                deps.avatarService.buildDefaultAvatar(active.name, 40),
+                buildDefaultAvatar(active.name, 40, deps.avatarService.colorForName(active.name)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -93,7 +94,7 @@ class _SoulSelectorState extends State<SoulSelector> {
     final deps = Dependencies.of(context);
     return ListTile(
       dense: true,
-      leading: deps.avatarService.buildDefaultAvatar(s.name, 28),
+      leading: buildDefaultAvatar(s.name, 28, deps.avatarService.colorForName(s.name)),
       title: Text(s.name, style: TextStyle(fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
