@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class WelcomePage extends StatelessWidget {
   final VoidCallback onComplete;
@@ -7,30 +8,66 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final suits = ['♠', '♥', '♦', '♣'];
+
     return Scaffold(
       body: Center(
-        child: SizedBox(
-          width: 480,
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('PaperPal', style: theme.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text('基于 MinerU + DeepSeek 的论文辅助阅读工具',
-                    style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                const SizedBox(height: 32),
-                Text('首次使用？请在设置页配置 API Key 后开始使用。', style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: onComplete,
-                  child: const Text('进入设置'),
-                ),
-              ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 80,
+              child: Stack(
+                children: [
+                  for (int i = 0; i < 12; i++)
+                    Positioned(
+                      top: i < 4 ? 0 : (i < 8 ? 20 : 40),
+                      left: (i % 4) * 80.0 + 10,
+                      child: Transform.rotate(
+                        angle: (i % 4 - 1.5) * 0.15,
+                        child: Text(
+                          suits[i % 4],
+                          style: TextStyle(
+                            fontSize: 48,
+                            color: theme.colorScheme.secondary.withValues(alpha: 0.06),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              'PaperPal',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 36,
+                fontWeight: FontWeight.w700,
+                foreground: Paint()
+                  ..shader = LinearGradient(
+                    colors: [
+                      theme.colorScheme.secondary,
+                      const Color(0xFFFFE08A),
+                      theme.colorScheme.secondary.withValues(alpha: 0.7),
+                    ],
+                  ).createShader(const Rect.fromLTWH(0, 0, 200, 50)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '— 掉进兔子洞，开启论文阅读之旅 —',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 40),
+            FilledButton(
+              onPressed: onComplete,
+              child: const Text('进入奇妙世界'),
+            ),
+          ],
         ),
       ),
     );
