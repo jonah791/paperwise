@@ -1,16 +1,22 @@
 ﻿# ALICE PaperPal
 
-**ALICE PaperPal** — 基于 MinerU + DeepSeek V4 的论文辅助阅读桌面工具。
+**ALICE PaperPal** — 基于 MinerU + DeepSeek V4 的论文辅助阅读工具。支持 Windows 桌面和 Android 移动端。
 
 搜索论文、导入 PDF、自动解析、自动翻译、AI 问答与摘要。AI 伙伴会记住你的偏好和过往对话，像真人一样陪伴你阅读论文。
 
-> **v0.2.0 全新 UI** — Alice in Wonderland 主题设计，深紫+暖金暗色与暖白+金日间双主题，动感渐变背景，扑克牌花色装饰元素，自定义字体，页面过渡动画。详见更新日志。
+> **v0.3.0 新增 Android 支持** — 完整的 Android 移动端适配，自适应底部导航、平台抽象层加密、移动端阅读体验优化。[⬇ 下载 APK](https://github.com/jonah791/alice-paperpal/releases/latest)
 
 ## 快速开始
 
 ### 桌面应用
 
-从 [Releases](https://github.com/jonah791/alice-paperpal/releases) 下载最新版 `paperpal.exe`。
+从 [Releases](https://github.com/jonah791/alice-paperpal/releases) 下载最新版：
+- `ALICE-PaperPal-v*.Setup.exe` — 安装包（推荐）
+- `ALICE-PaperPal-v*.zip` — 便携版（解压即用）
+
+### Android 移动端
+
+从 [Releases](https://github.com/jonah791/alice-paperpal/releases) 下载 `app-release.apk`，安装到 Android 7.0+ 设备。
 
 ### CLI 工具（无需 Flutter GUI）
 
@@ -47,24 +53,35 @@ dart run tool/paperpal.dart import url https://arxiv.org/pdf/1706.03762.pdf
 dart run tool/paperpal.dart ask <id> "核心贡献是什么？"
 ```
 
-### 从源码构建桌面版
+### 从源码构建
 
 ```bash
 git clone https://github.com/jonah791/alice-paperpal.git
 cd alice-paperpal
 flutter pub get
-flutter build windows --release
-```
 
-构建产物在 `build/windows/x64/runner/Release/paperpal.exe`。
+# Windows 桌面版
+flutter build windows --release
+# 产物：build/windows/x64/runner/Release/paperpal.exe
+
+# Android APK
+flutter build apk --release
+# 产物：build/app/outputs/flutter-apk/app-release.apk
+```
 
 ### 首次使用
 
-1. 双击运行
+**Windows：**
+1. 运行安装包（或解压 ZIP 后运行 paperpal.exe）
 2. 在设置页填入 LLM API Key
 3. 选择或创建一个 AI 伙伴（灵魂）
 4. 搜索论文或上传 PDF
 5. 自动解析 + 自动翻译 → 开始阅读
+
+**Android：**
+1. 安装 APK 后打开
+2. 在设置页填入 LLM API Key
+3. 其余步骤同上
 
 ## 功能
 
@@ -92,13 +109,14 @@ flutter build windows --release
 | **动效系统** | 动感渐变背景、页面过渡动画、扑克牌花色加载、错列入场、骨架屏 |
 | **自定义字体** | Playfair Display（标题）、Inter（UI）、Noto Serif SC（中文阅读） |
 | **全新图标** | 256×256 爱丽丝主题应用图标 |
-| **安装包** | 支持 Inno Setup 安装包（含 PDF 文件关联） |
+| **安装包** | Windows: Inno Setup 安装包 + ZIP 便携版<br>Android: APK（CI 自动构建） |
+| **Android 平台** | 自适应底部导航、平台抽象加密（Android Keystore）、移动端阅读优化 |
 | **论文库** | 本地缓存 + 持久化，重启不丢失 |
 
 ## 架构
 
 ```
-ALICE PaperPal (Flutter Desktop)
+ALICE PaperPal (Flutter Desktop + Android)
     │
     ├── MinerU v4 API     PDF → Markdown/LaTeX/HTML（异步任务提交 → 轮询）
     ├── DeepSeek V4 API   问答 / 翻译 / 摘要
@@ -108,22 +126,25 @@ ALICE PaperPal (Flutter Desktop)
 
 **无自建后端服务器。** 所有 API 直连外部服务，用户自备 API Key。
 
+**跨平台：** 单代码库（single entry point），`PlatformService` 抽象层处理平台差异（加密、文件打开、窗口管理）。桌面端 90%+ 代码与移动端共享。
+
 ## 项目结构
 
 ```
 paperpal/
 ├── lib/
-│   ├── main.dart                    # 入口 + Dependencies DI
+│   ├── main.dart                    # 入口 + Dependencies DI + AnimatedBackground
 │   ├── core/
 │   │   ├── api/                     # 外部 API 客户端
 │   │   ├── models/                  # 数据模型
-│   │   ├── services/                # 业务服务
+│   │   ├── services/                # 业务服务（含 platform_service.dart 平台抽象层）
 │   │   └── utils/                   # 工具
 │   └── ui/
 │       ├── pages/                   # 页面（7 个）
 │       ├── widgets/                 # 组件（10 个）
 │       └── theme/                   # 主题（Alice in Wonderland 双主题）
-├── test/                            # 320 个单元测试
+├── android/                         # Android 工程
+├── test/                            # 320+ 个单元测试
 ├── tool/                            # CLI 命令行工具
 └── windows/
     ├── installer.iss                # Inno Setup 安装包脚本
@@ -146,16 +167,17 @@ paperpal/
 
 - **框架:** Flutter (Dart) + Material 3
 - **桌面:** 原生 Flutter Windows（无需 Python）
+- **移动端:** Android 7.0+ (API 24+)
 - **解析:** MinerU v4 API（异步任务模型，支持预签名上传）
 - **LLM:** DeepSeek V4 / OpenAI / Claude
 - **搜索:** arXiv + Semantic Scholar
-- **安全:** HTTPS 强制 / DPAPI 加密 Key 存储 / 日志脱敏
+- **安全:** HTTPS 强制 / DPAPI 加密（桌面）+ Android Keystore（移动端）/ 日志脱敏
 - **UI 主题:** 自定义双主题 ColorScheme（深紫+暖金 / 暖白+金）
 - **UI 字体:** Google Fonts — Playfair Display, Inter, Noto Serif SC
 - **UI 动效:** AnimationController + CustomPainter 动感渐变背景
 - **测试:** 320+ 个单元测试覆盖 models/services/utils/API
 - **CLI 工具:** 纯 Dart 命令行，`dart run tool/paperpal.dart`
-- **打包:** Inno Setup 安装程序
+- **打包:** Windows: Inno Setup + ZIP / Android: APK
 - **CI:** GitHub Actions (analyze → test → build → release)
 
 ## 许可
