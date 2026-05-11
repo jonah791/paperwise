@@ -10,11 +10,26 @@
 
 ## 一、项目概述
 
-PaperPal 是一款基于 MinerU + DeepSeek V4 的论文辅助阅读桌面工具。支持搜索论文、导入 PDF、自动解析、自动翻译、AI 问答与摘要。核心特色是「AI 生命感系统」——灵魂、记忆、画像、头像让 AI 伙伴像真人一样陪伴用户阅读论文。
+### 产品定位
 
-v0.2.0 新增 **Alice in Wonderland 主题 UI**——完整双主题系统（深紫+暖金暗色 / 暖白+金日间）、动感渐变背景、自定义字体、页面过渡动画、扑克牌花色装饰元素，将产品视觉质感提升至消费级水平。
+PaperPal 是一款面向科研人员、研究生和 AI 从业者的**论文辅助阅读工具**。核心价值主张是 **「AI 生命感系统」** —— 不只是工具，而是一位有灵魂、有记忆、有性格的 AI 伙伴，陪伴用户完成从论文搜索到深度理解的完整阅读流程。
 
-v0.3.0 新增 **Android 移动端支持** ——平台抽象层 `PlatformService`（Android Keystore 加密 / 自适应底部导航 / open_filex 打开 PDF），单代码库同时构建 Windows 桌面版和 Android APK。
+### 目标用户
+- 需要大量阅读论文的研究生和博士生
+- 跨领域研究时快速上手陌生方向的科研人员
+- 非英语母语者需要论文翻译辅助
+- AI/ML 从业者追踪前沿进展
+
+### 关键里程碑
+
+| 版本 | 日期 | 核心交付 |
+|---|---|---|
+| v0.1.0 | 2026-05-09 | 初始版本：搜索/解析/翻译/问答 |
+| v0.1.4 | 2026-05-11 | CLI 工具 + 纯 Dart 核心层 |
+| v0.2.0 | 2026-05-11 | Alice in Wonderland UI 重设计 |
+| v0.3.0 | 2026-05-11 | Android 移动端支持 + 跨平台架构 |
+
+### 核心能力一览
 
 ### 核心能力一览
 
@@ -425,9 +440,74 @@ v0.3.0 已通过 `PlatformService` 抽象层实现了跨平台加密：桌面端
 
 详见 `API.md`。
 
+### 4.10 依赖清单
+
+| 包名 | 版本 (pubspec.lock) | 用途 | 平台限制 |
+|---|---|---|---|
+| `flutter` | SDK | 框架 | 跨平台 |
+| `dio` | any | HTTP 客户端（MinerU/LLM/arXiv 请求） | 跨平台 |
+| `shared_preferences` | any | 配置持久化 | 跨平台 |
+| `path_provider` | any | 应用数据目录 | 跨平台 |
+| `archive` | any | ZIP 解压（MinerU 解析结果） | 跨平台 |
+| `flutter_math_fork` | any | LaTeX 公式渲染 | 跨平台 |
+| `logging` | any | 结构化日志 | 跨平台 |
+| `uuid` | any | 唯一 ID 生成 | 跨平台 |
+| `synchronized` | any | 异步锁 | 跨平台 |
+| `syncfusion_flutter_pdf` | any | PDF 页数检测 | 跨平台 |
+| `connectivity_plus` | any | 网络状态监听 | 跨平台 |
+| `image_picker` | any | 头像选择（相册/相机） | 跨平台 |
+| `file_picker` | any | 论文文件选择 | 跨平台 |
+| `ffi` | any | FFI 支持（DPAPI 底层） | 所有平台，但仅 Windows 使用 |
+| `google_fonts` | any | Playfair Display/Inter/Noto Serif SC | 跨平台（首次需网络） |
+| `flutter_secure_storage` | any | Android Keystore 加密 | 跨平台 |
+| `open_filex` | any | Android 打开 PDF | 跨平台 |
+| `window_manager` | any | 桌面窗口管理 | **仅 Windows** |
+| `tray_manager` | any | 系统托盘 | **仅 Windows** |
+| `flutter_test` | SDK | 测试框架 | 跨平台 |
+| `flutter_lints` | any | Lint 规则 | — |
+
 ---
 
-## 五、构建与发布
+## 五、关键服务详解
+
+### 5.1 PaperService — 核心编排（`lib/core/services/paper_service.dart`）
+
+这是项目中**最复杂、最重要的服务**。它负责论文的完整生命周期，是 AI 问答、导入、解析、翻译的核心调度者。
+
+| 方法 | 职责 | 涉及的外部依赖 |
+|---|---|---|
+| `importPdf(File)` | 本地 PDF 导入 → 保存到缓存 | `CacheService`, `MineruApi` |
+| `importUrl(String)` | URL 论文导入 → 自动下载 PDF | `CacheService`, `MineruApi`, `ArxivApi`（补全元数据） |
+| `importSearchResult(SearchResult, String)` | 搜索结果导入 → 下载 PDF | `SearchService`, `CacheService` |
+| `parsePaper(String)` | 触发 MinerU 解析 → 轮询 → 获取结果 | `MineruApi`, `ParseService` |
+| `askQuestionStream(String, String)` | AI 问答（流式） | `LLMProvider`, `SoulService`, `MemoryService`, `PortraitService` |
+| `summarizePaper(String)` | 论文摘要 | `LLMProvider` |
+| `translatePaper(String)` | 全论| AI 译文 | `TranslationService`, `LLMProvider` |
+
+**AI 问答数据流：**（含灵魂+画像+记忆上下文装配流程如上文 3.2 节所示）
+
+_Prompt 组装权重：灵魂人格 ~45% + 论文上下文 ~35% + 记忆 ~10% + 画像 ~10%_
+
+### 5.2 PlatformService — 平台抽象层（`lib/core/services/platform_service.dart`）
+
+v0.3.0 新增，解决桌面/移动端平台差异。所有平台特定逻辑集中于此，**业务代码不直接感知平台**。
+
+```dart
+abstract class PlatformService {
+  Future<String> encrypt(String plainText);     // DPAPI (desktop) / Keystore (Android)
+  Future<String?> decrypt(String cipherText);   // DPAPI (desktop) / Keystore (Android)
+  Future<void> openFile(String path);           // Process.run (desktop) / open_filex (Android)
+  Future<String> get dataPath;                  // path_provider (共通)
+  bool get isDesktop;                           // Platform.isWindows
+  bool get isAndroid;                           // Platform.isAndroid
+}
+```
+
+通过 `createPlatformService()` 工厂方法在 `main()` 入口处创建一次，注入 `Dependencies`。`ConfigService` 通过构造参数接收 `PlatformService` 实例，替换原有的直接 `dpapi.encrypt()` 调用。
+
+---
+
+## 六、构建与发布
 
 ### 5.1 本地构建
 
@@ -476,14 +556,19 @@ dart run tool/paperpal.dart search "attention mechanism"
 **流程：**
 
 ```
-analyze（flutter analyze --no-fatal-warnings --no-fatal-infos）
-  → test（flutter test）
-  → build（flutter build windows --release）
-  → Package ZIP（Compress-Archive）
-  → Install Inno Setup（choco install innosetup）
-  → Build installer（iscc windows\installer.iss /DMyAppVersion=$ver）
-  → Upload artifacts（ZIP + Setup.exe）
-  → Create Release（GitHub Releases）
+                     ┌── analyze (flutter analyze)
+                     │
+master push / tag v* ── test (flutter test)
+                     │
+                     ├── deploy-windows ──────────────────────
+                     │   ├── flutter build windows --release   │
+                     │   ├── Package ZIP                          │
+                     │   ├── Build installer (iscc)               │──→ GitHub Release
+                     │   └── Upload via gh release create         │
+                     │                                            │
+                     └── deploy-android ─────────────────────     │
+                         ├── flutter build apk --release           │
+                         └── Upload via gh release upload ────────┘
 ```
 
 **构建产物：**
@@ -572,10 +657,62 @@ git push origin v0.x.x
 | 11 | S2 API 429 限频 | Semantic Scholar 免费 API 100 req/5min，超出后搜索结果缺失，不影响 arXiv 结果 |
 | 12 | AnimatedBackground 性能 | Canvas CustomPainter 每帧重绘，在低配机器上可能增加 CPU 占用。如遇性能问题可考虑降低帧率或禁用（用 `Opacity` 控制） |
 | 13 | Google Fonts 加载 | 首次启动需要网络加载字体文件，之后缓存。无网络时回退到系统字体 |
+| 14 | Android 文件选择 | `file_picker` 使用 SAF（Storage Access Framework），无需 `READ_EXTERNAL_STORAGE` 权限。Android 11+ 上用户可选择"授予全部文件访问权限" |
+| 15 | Android 导航栏 | 自适应 `NavigationBar` 在 <360dp 宽设备上文字可能截断，考虑缩小图标/文字间距 |
+| 16 | Android 返回键 | 当前未拦截系统返回键（返回即退出应用）。如需返回上一页/确认退出，需在 `MaterialApp` 中处理 `PopScope` |
+| 17 | APK 未签名 | CI 构建的 APK 是 debug-unsigned。正式分发需配置 Android 签名（`key.properties` + `signingConfigs`） |
 
 ---
 
-## 八、设计决策记录（v0.2.0）
+## 八、开发者快速指南
+
+### 8.1 本地开发流程
+
+```bash
+# 1. 克隆
+git clone https://github.com/jonah791/alice-paperpal.git
+cd alice-paperpal
+
+# 2. 安装依赖
+flutter pub get
+
+# 3. 运行测试（确保现有功能不受影响）
+flutter test
+
+# 4. 运行桌面版（热重载调试）
+flutter run -d windows
+
+# 5. 运行 Android 版（需连接设备或模拟器）
+flutter run -d android
+
+# 6. 构建 Release
+flutter build windows --release   # → paperpal.exe
+flutter build apk --release       # → app-release.apk
+```
+
+### 8.2 常见问题排查
+
+| 症状 | 可能原因 | 解决 |
+|---|---|---|
+| `flutter build windows` 失败 `error RC2176` | ICO 文件格式不兼容 | 用 Python 重新生成：所有尺寸用 PNG 格式而非 BMP。见 `windows/runner/resources/app_icon.ico` |
+| Android 构建报 `Deprecated Gradle` | Gradle 版本与 Flutter SDK 不匹配 | `flutter upgrade` 或调整 `android/gradle-wrapper.properties` 中的 Gradle 版本 |
+| `windowManager.ensureInitialized()` 崩溃 | 在 Android 上运行（桌面插件不可用） | `PlatformService` 已在 `main()` 中做条件判断。确认 `!platform.isAndroid` 包裹了所有 `windowManager` 调用 |
+| `dpapi.encrypt()` 返回 null | 在 Linux/测试环境运行（无 DPAPI） | `DesktopPlatformService.encrypt()` 已做 null → plaintext 回退。`ConfigService` 测试使用 `_TestPlatform` mock |
+| CI Release 缺少 Windows 文件 | Release job 的 `download-artifact` 路径不匹配 | 改为每个 build job 直接用 `gh release upload` 上传，见 `.github/workflows/build.yml` |
+| CLI 命令报 `401` | 某些 LLM 端点不支持 Markdown system prompt | 已在 `cli_helpers.dart` 中修复为纯文本格式 |
+| Google Fonts 不显示 | 网络不通或字体缓存未生效 | 检查网络连接，或在本地预下载字体文件 |
+
+### 8.3 代码规范
+
+- **命名风格**: Dart 标准（camelCase 变量/方法，PascalCase 类，lowercase_with_underscores 文件）
+- **主题色引用**: 所有颜色从 `Theme.of(context).colorScheme` 获取，禁止硬编码色值
+- **平台判断**: 通过 `configService.platform.isAndroid` / `.isDesktop`，不使用 `Platform.isXxx`
+- **测试**: 核心逻辑必须写测试，UI 层至少保证编译通过
+- **Commit 风格**: `type(scope): message` — `feat(ui):`, `fix(ci):`, `docs:`, `refactor(core):`
+
+---
+
+## 九、已知问题与注意事项
 
 ### 为什么选择 Alice in Wonderland 主题？
 - 产品名称 "ALICE" 天然关联爱丽丝梦游仙境
@@ -601,11 +738,47 @@ git push origin v0.x.x
 
 ---
 
-## 九、未来规划
+## 十、设计决策记录
+
+### 为什么选择 Alice in Wonderland 主题？
+- 产品名称 "ALICE" 天然关联爱丽丝梦游仙境
+- 项目已有的「灵魂/记忆/画像」系统已有拟人化设定，童话主题强化了这一印象
+- 深紫+暖金色调在论文阅读场景中兼顾专业感与品牌辨识度
+- 扑克牌花色（♠♥♦♣）作为装饰元素贯穿全 UI，建立了统一的视觉语言
+
+### 为什么使用 Google Fonts 而非本地字体？
+- 减少仓库体积（Playfair Display + Inter ≈ 300KB 字体文件）
+- `google_fonts` 包自动缓存，首次加载后离线可用
+- 方便未来更换字体而无需重新构建
+
+### 为什么重写 ColorScheme 而不使用 colorSchemeSeed？
+- `colorSchemeSeed` 生成的 palette 不可控，暗色模式下紫色/金色搭配不稳定
+- 显式 ColorScheme 确保跨版本 Flutter 的一致性
+- 精确控制每个语义色（primaryContainer、surfaceContainerHighest 等）的色值和透明度
+
+### 为什么用 CustomPainter 而非静态图片做背景？
+- 动效可以随主题切换自动变色
+- 花色暗纹可编程控制密度/透明度
+- 无额外图片资源体积
+- 渐变位置缓动产生呼吸感
+
+### 为什么用 PlatformService 而非条件编译？
+- 单 entry point 减少维护成本（不需要两个 main.dart）
+- 平台差异对业务代码透明（业务层只调 `platform.openFile()`，不管底层实现）
+- 新增平台支持只需添加新的 `PlatformService` 实现类
+- 测试可以用 `_TestPlatform` 模拟任意平台
+
+### 为什么 Android 用 BottomNavigationBar 而非 Drawer？
+- BottomNavigationBar 是 Material 3 推荐的主导航方式，拇指操作友好
+- 3 个 Tab 刚好匹配桌面 NavigationRail 的结构，`_currentIndex` 完全复用
+- Drawer 适合更多导航项的场景（5+ 项）
+
+---
+
+## 十一、未来规划
 
 | 阶段 | 内容 | 预估 |
 |---|---|---|
-| Phase 3 | APK 移动端（Android） | 5-6 天 |
 | Phase 3+ | iOS 适配 | 待定 |
 | Phase 3+ | PDF 标注/高亮 | 待定 |
 | — | 更多 LLM Provider（本地 Ollama） | 1 天 |
@@ -614,10 +787,45 @@ git push origin v0.x.x
 | — | MinerU Agent 轻量 API 兜底 | 1 天 |
 | — | AnimatedBackground 性能优化 | 1 天 |
 | — | UI widget test 覆盖 | 2 天 |
+| — | Deep link（arxiv.org 链接直接打开） | 1 天 |
+| — | Android 自适应横屏布局 | 1 天 |
+| — | 自动 APK 签名配置 | 1 天 |
 
 ---
 
-## 十、版本历史
+## 十二、版本历史
+
+### v0.3.0（2026-05-11）— Android Mobile Support
+
+**跨平台架构：**
+- `PlatformService` 抽象层：`DesktopPlatformService` + `AndroidPlatformService`
+- 桌面：DPAPI 加密 + `Process.run` 打开 PDF
+- Android：`flutter_secure_storage`（Keystore）+ `open_filex`
+- `main()` 中条件初始化 `window_manager`/`tray_manager`（Android 跳过）
+- 单 entry point，单代码库，桌面/移动端共享 90%+ 代码
+
+**自适应导航：**
+- `LayoutBuilder` + 600dp 阈值：手机 → `NavigationBar`（底部），桌面 → `NavigationRail`（侧栏）
+- 两端共享 `IndexedStack` + page list，`_currentIndex` 完全复用
+
+**页面适配：**
+- 阅读页笔记：280px 侧栏 → `DraggableScrollableSheet` BottomSheet
+- 阅读页对照：Android 隐藏 side-by-side，仅原文/译文切换
+- 阅读页 AppBar：5 个图标按钮 → `PopupMenuButton` 溢出菜单
+- 搜索页：按钮 `Row` → `Wrap`，窄屏自动换行
+- ExplainDialog：`SizedBox(560)` → `ConstrainedBox(maxWidth: 560)`
+
+**Android 工程：**
+- `flutter create --platforms=android`
+- `AndroidManifest.xml`：INTERNET + ACCESS_NETWORK_STATE
+- `build.gradle.kts`：minSdk 21, targetSdk 34
+- 桌面包（window_manager/tray_manager）保留但条件跳过
+
+**CI/CD：**
+- 新增 `deploy-android` job（ubuntu-latest）
+- `deploy-windows` 创建 Release 并上传 Windows 产物
+- `deploy-android` 上传 APK 到同一 Release
+- 修复：ICO 全 PNG 格式、choco --force、中文语言包移除
 
 ### v0.2.0（2026-05-11）— Alice in Wonderland UI Redesign
 
@@ -681,7 +889,7 @@ git push origin v0.x.x
 
 ---
 
-## 十一、联系方式
+## 十三、联系方式
 
 **仓库：** https://github.com/jonah791/alice-paperpal  
 **作者：** @jonah791  
