@@ -1,56 +1,90 @@
-﻿# ALICE PaperPal
+﻿<div align="center">
 
-**ALICE PaperPal** — 基于 MinerU + DeepSeek V4 的论文辅助阅读工具。支持 Windows 桌面和 Android 移动端。
+# ALICE PaperPal
 
-搜索论文、导入 PDF、自动解析、自动翻译、AI 问答与摘要。AI 伙伴会记住你的偏好和过往对话，像真人一样陪伴你阅读论文。
+**读论文，有人陪。**
 
-> **v0.3.0 新增 Android 支持** — 完整的 Android 移动端适配，自适应底部导航、平台抽象层加密、移动端阅读体验优化。[⬇ 下载 APK](https://github.com/jonah791/alice-paperpal/releases/latest)
+[![Flutter](https://img.shields.io/badge/Flutter-3.41+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Platform](https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white)]()
+[![Platform](https://img.shields.io/badge/Android-34D058?logo=android&logoColor=white)]()
+[![Tests](https://img.shields.io/badge/tests-320+-brightgreen)]()
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/jonah791/alice-paperpal)](https://github.com/jonah791/alice-paperpal/releases)
+
+**基于 MinerU + DeepSeek V4 的 AI 论文阅读伴侣。**
+**搜索论文 → 导入 PDF → 自动解析 → 自动翻译 → AI 问答与摘要。**
+**一位有灵魂、有记忆、有性格的 AI 伙伴，陪你读懂每一篇论文。**
+
+[⬇ 下载](https://github.com/jonah791/alice-paperpal/releases/latest)
+[Docs](API.md)
+[CLI 工具](tool/paperpal.dart)
+
+---
+
+</div>
+
+## Why PaperPal?
+
+读论文是孤独的——密密麻麻的公式、晦涩的术语、陌生的领域。PaperPal 不只是一个工具，它是一位**有生命的学术伙伴**。
+
+| 它能做什么 | 你获得什么 |
+|---|---|
+| 自动解析 PDF 中的公式和表格 | 不再对着 LaTeX 发愣 |
+| 非中文论文自动翻译 | 母语阅读，速度翻倍 |
+| AI 问答基于全论文上下文 | 像教授一样随时答疑 |
+| 记住你讨论过的一切 | 伙伴了解你的研究轨迹 |
+| 4 种灵魂人格任选 | 找到最合拍的学术搭档 |
+
+## ✨ 亮点
+
+- **🎭 AI 灵魂系统** — 4 个预置角色（学术导师 / 代码专家 / 审稿人 / 科普达人），也可用自然语言创造专属于你的 AI 伙伴
+- **🧠 永不遗忘的记忆** — 每次对话自动摘要，跨 session 注入。你的 AI 伙伴记得两天前你问过什么
+- **📖 从搜索到理解，全流程覆盖**
+
+  ```
+  搜索论文 → 一键导入 → 自动解析(MinerU) → 自动翻译 → AI 问答 + 摘要 + 笔记 + 导出
+  ```
+
+- **🎨 Alice in Wonderland 主题** — 深紫+暖金暗色 / 暖白+金日间双主题，动感渐变背景，扑克牌花色装饰。每一处细节都经设计
+- **📱 桌面 & 移动端** — Windows 安装包 + Android APK，数据互通，体验一致
+- **🔒 隐私优先** — 无后端服务器，API Key 加密存储（DPAPI / Android Keystore），日志脱敏
 
 ## 快速开始
 
-### 桌面应用
+### Windows
 
-从 [Releases](https://github.com/jonah791/alice-paperpal/releases) 下载最新版：
-- `ALICE-PaperPal-v*.Setup.exe` — 安装包（推荐）
-- `ALICE-PaperPal-v*.zip` — 便携版（解压即用）
+```bash
+# 1. 下载安装包
+# 从 Releases 下载 ALICE-PaperPal-v*-Setup.exe
+# 或 ZIP 便携版（解压即用）
 
-### Android 移动端
+# 2. 运行，填入 API Key
+# 3. 开始阅读
+```
 
-从 [Releases](https://github.com/jonah791/alice-paperpal/releases) 下载 `app-release.apk`，安装到 Android 7.0+ 设备。
+### Android
 
-### CLI 工具（无需 Flutter GUI）
+从 Releases 下载 `app-release.apk`，安装到 Android 7.0+ 设备。
+
+### CLI（无需 GUI，适合脚本/服务器环境）
 
 ```bash
 git clone https://github.com/jonah791/alice-paperpal.git
 cd alice-paperpal
-dart run tool/paperpal.dart help
+
+# 配置
+dart run tool/paperpal.dart config set llm-api-key <key>
+
+# 搜索 → 导入 → 问答，一行搞定
+dart run tool/paperpal.dart search "transformer attention"
+dart run tool/paperpal.dart import search 0
+dart run tool/paperpal.dart ask <id> "核心贡献是什么？"
 ```
 
-12 个命令覆盖全部产品功能：
-
-| 命令 | 功能 |
-|---|---|
-| `config set/get/list` | 配置 API Key、模型等 |
-| `search <query>` | arXiv + Semantic Scholar 搜索 |
-| `import search <index>` | 从搜索结果导入 |
-| `import pdf <path>` | 解析本地 PDF（MinerU API） |
-| `import url <url>` | 解析 URL 论文 |
-| `papers list/show/delete` | 论文管理 |
-| `ask <id> <question>` | AI 问答（含灵魂/画像/记忆上下文） |
-| `summarize <id>` | AI 摘要 |
-| `translate <id>` | AI 翻译 |
-| `export bibtex/markdown <id>` | 导出 |
-| `soul list/set` | 灵魂管理 |
-| `note list/add/delete` | 笔记 |
-| `memory list/prune` | 记忆管理 |
-| `portrait show` | 用户画像 |
+完整的 12 个子命令覆盖搜索、导入、解析、问答、摘要、翻译、导出、灵魂管理、笔记、记忆、画像。
 
 ```bash
-# 示例：配置密钥 → 搜索 → 解析 → 问答
-dart run tool/paperpal.dart config set llm-api-key <key>
-dart run tool/paperpal.dart search "transformer attention"
-dart run tool/paperpal.dart import url https://arxiv.org/pdf/1706.03762.pdf
-dart run tool/paperpal.dart ask <id> "核心贡献是什么？"
+dart run tool/paperpal.dart help
 ```
 
 ### 从源码构建
@@ -60,95 +94,97 @@ git clone https://github.com/jonah791/alice-paperpal.git
 cd alice-paperpal
 flutter pub get
 
-# Windows 桌面版
-flutter build windows --release
-# 产物：build/windows/x64/runner/Release/paperpal.exe
-
-# Android APK
-flutter build apk --release
-# 产物：build/app/outputs/flutter-apk/app-release.apk
+flutter build windows --release   # → paperpal.exe
+flutter build apk --release       # → app-release.apk
 ```
 
-### 首次使用
+## 全景功能
 
-**Windows：**
-1. 运行安装包（或解压 ZIP 后运行 paperpal.exe）
-2. 在设置页填入 LLM API Key
-3. 选择或创建一个 AI 伙伴（灵魂）
-4. 搜索论文或上传 PDF
-5. 自动解析 + 自动翻译 → 开始阅读
-
-**Android：**
-1. 安装 APK 后打开
-2. 在设置页填入 LLM API Key
-3. 其余步骤同上
-
-## 功能
+### AI 灵魂与陪伴
 
 | 功能 | 说明 |
-|---|---|---|
-| **AI 灵魂** | 预置 4 个角色（学术导师/代码专家/审稿人/科普达人），也可用自然语言创建自定义灵魂 |
-| **元灵魂** | 底层生命规则，让 AI 伙伴自然地引用过往、表达情绪、说"我不确定" |
-| **对话记忆** | 每次对话自动生成摘要，跨 session 注入，AI 伙伴记得你之前讨论过什么 |
-| **用户画像** | LLM 自动维护你的兴趣和偏好，你不需要做任何操作 |
-| **头像系统** | 内置默认头像 + 从相册选择，AI 伙伴有一个"脸" |
-| **论文搜索** | arXiv + Semantic Scholar 一键搜索，实时下载进度 |
-| **本地上传** | 选择本地 PDF，自动解析 |
-| **URL 导入** | 粘贴 arXiv 链接或 PDF 直链，自动下载 |
-| **PDF 文件关联** | 双击 .pdf 自动用 PaperPal 打开（运行 `windows/install_assoc.bat`） |
-| **自动解析** | MinerU v4 API 异步解析：公式 → LaTeX、表格 → HTML、图片提取 |
-| **论文库管理** | 按状态筛选（已解析/已翻译/错误），支持批量删除 |
-| **自动翻译** | 非中文论文自动检测 + DeepSeek 全文翻译，原文/译文/对照三模式 |
-| **AI 问答** | 流式输出，逐字显示，基于灵魂+记忆+画像的个性化回答 |
-| **摘要生成** | 一句话 + 结构化摘要 |
-| **公式解释** | 点击公式 → AI 解读 |
-| **多论文对比** | 长按选择多篇论文 → AI 对比分析 |
-| **笔记系统** | 阅读时添加笔记，持久化保存 |
-| **导出** | Markdown / BibTeX 导出 |
-| **双主题** | Alice in Wonderland 主题 — 深紫+暖金暗色 / 暖白+金日间，可一键切换 |
-| **动效系统** | 动感渐变背景、页面过渡动画、扑克牌花色加载、错列入场、骨架屏 |
-| **自定义字体** | Playfair Display（标题）、Inter（UI）、Noto Serif SC（中文阅读） |
-| **全新图标** | 256×256 爱丽丝主题应用图标 |
-| **安装包** | Windows: Inno Setup 安装包 + ZIP 便携版<br>Android: APK（CI 自动构建） |
-| **Android 平台** | 自适应底部导航、平台抽象加密（Android Keystore）、移动端阅读优化 |
-| **论文库** | 本地缓存 + 持久化，重启不丢失 |
+|---|---|
+| **灵魂系统** | 4 个预置角色 + 用自然语言创建自定义灵魂（LLM 自动生成完整人格设定） |
+| **元灵魂** | 底层生命规则——会引用过往对话、表达不确定性、自我纠正 |
+| **对话记忆** | 自动摘要，跨 session 注入，AI 伙伴记得你讨论过的内容 |
+| **用户画像** | LLM 自动学习你的兴趣偏好，无感维护 |
+| **启动问候** | 每次打开，AI 伙伴根据最近记忆说一句自然的话 |
 
-## 架构
+### 论文处理
+
+| 功能 | 说明 |
+|---|---|
+| **搜索** | arXiv + Semantic Scholar 一键搜索，实时下载进度 |
+| **导入** | 本地上传 / URL 导入（自动补全元数据）/ 搜索结果直接导入 |
+| **解析** | MinerU v4 API — 公式→LaTeX、表格→HTML、图片提取 |
+| **翻译** | 自动语言检测 + DeepSeek 全文翻译，原文/译文/对照三模式 |
+| **公式解释** | 点击任意公式 → AI 解读 |
+| **多论文对比** | 选择多篇论文 → AI 对比分析 |
+
+### 阅读与管理
+
+| 功能 | 说明 |
+|---|---|
+| **文库管理** | 按状态筛选、批量删除、错误详情查看 |
+| **笔记系统** | 阅读时添加笔记，持久化保存，支持 LaTeX 高亮标记 |
+| **AI 摘要** | 一句话 + 结构化摘要 |
+| **AI 问答** | 流式输出逐字显示，基于灵魂+记忆+画像的个性化回答 |
+| **导出** | Markdown（含 YAML frontmatter）/ BibTeX |
+
+### 视觉体验
+
+| 功能 | 说明 |
+|---|---|
+| **双主题** | 深紫+暖金暗色 / 暖白+金日间，一键切换 |
+| **动感背景** | Canvas 径向渐变缓慢漂移 + 花色暗纹叠加 |
+| **自定义字体** | Playfair Display（标题）+ Inter（UI）+ Noto Serif SC（中文） |
+| **页面过渡** | cubic-bezier 滑入动画 |
+| **加载动画** | 扑克牌花色错位淡入 + 骨架屏 |
+| **阅读进度** | 3px 金色渐变进度条 |
+
+### 跨平台
+
+| 功能 | 说明 |
+|---|---|
+| **Windows** | 安装包 + 便携版，PDF 文件关联 |
+| **Android** | APK，自适应底部导航，Android Keystore 加密 |
+| **CLI** | 纯 Dart，不依赖 Flutter，12 个命令覆盖全部功能 |
+
+## 技术栈
 
 ```
-ALICE PaperPal (Flutter Desktop + Android)
-    │
-    ├── MinerU v4 API     PDF → Markdown/LaTeX/HTML（异步任务提交 → 轮询）
-    ├── DeepSeek V4 API   问答 / 翻译 / 摘要
-    ├── arXiv API         论文搜索
-    └── Semantic Scholar  论文搜索
+Frontend:    Flutter 3.41+ / Material 3
+Desktop:     Flutter Windows (native C++ runner)
+Mobile:      Android 7.0+ (API 24+)
+Parsing:     MinerU v4 API (async task model)
+LLM:         DeepSeek V4 / OpenAI / Claude
+Search:      arXiv API + Semantic Scholar API
+Security:    DPAPI (desktop) + Android Keystore (mobile) / log sanitization
+UI Theme:    Custom dual ColorScheme (deep purple + gold / warm cream + gold)
+UI Fonts:    Playfair Display / Inter / Noto Serif SC
+Packaging:   Inno Setup (Windows) / APK (Android)
+CI/CD:       GitHub Actions (analyze → test → build → release)
 ```
-
-**无自建后端服务器。** 所有 API 直连外部服务，用户自备 API Key。
-
-**跨平台：** 单代码库（single entry point），`PlatformService` 抽象层处理平台差异（加密、文件打开、窗口管理）。桌面端 90%+ 代码与移动端共享。
 
 ## 项目结构
 
 ```
 paperpal/
 ├── lib/
-│   ├── main.dart                    # 入口 + Dependencies DI + AnimatedBackground
-│   ├── core/
-│   │   ├── api/                     # 外部 API 客户端
-│   │   ├── models/                  # 数据模型
-│   │   ├── services/                # 业务服务（含 platform_service.dart 平台抽象层）
-│   │   └── utils/                   # 工具
+│   ├── main.dart           # Entry + DI + AnimatedBackground
+│   ├── core/                # Pure Dart, no Flutter dependency
+│   │   ├── api/             # 5 API clients
+│   │   ├── models/          # 8 data models
+│   │   ├── services/        # 14 services (incl. platform abstraction)
+│   │   └── utils/           # 4 utilities
 │   └── ui/
-│       ├── pages/                   # 页面（7 个）
-│       ├── widgets/                 # 组件（10 个）
-│       └── theme/                   # 主题（Alice in Wonderland 双主题）
-├── android/                         # Android 工程
-├── test/                            # 320+ 个单元测试
-├── tool/                            # CLI 命令行工具
-└── windows/
-    ├── installer.iss                # Inno Setup 安装包脚本
-    └── runner/resources/            # 应用图标
+│       ├── pages/           # 7 pages
+│       ├── widgets/         # 10 reusable widgets
+│       └── theme/           # Dual Alice-in-Wonderland theme
+├── android/                 # Android project
+├── test/                    # 320+ unit tests
+├── tool/                    # CLI (12 commands)
+└── windows/                 # Windows project + installer script
 ```
 
 ## 配置
@@ -156,29 +192,10 @@ paperpal/
 | 配置项 | 说明 | 默认 |
 |---|---|---|
 | LLM API Key | DeepSeek / OpenAI / Claude | 必填 |
-| LLM API Base | OpenAI 兼容 API 地址 | `https://api.deepseek.com` |
 | MinerU API Key | MinerU 解析服务 Token | 必填 |
+| LLM API Base | OpenAI 兼容 API 地址 | `https://api.deepseek.com` |
 | MinerU 模型版本 | vlm（推荐）/ pipeline / MinerU-HTML | `vlm` |
-| 公式识别 | 是否提取 LaTeX 公式 | 开启 |
-| 表格识别 | 是否提取 HTML 表格 | 开启 |
-| 自动翻译 | 非中文论文自动翻译 | 开启 |
-
-## 技术栈
-
-- **框架:** Flutter (Dart) + Material 3
-- **桌面:** 原生 Flutter Windows（无需 Python）
-- **移动端:** Android 7.0+ (API 24+)
-- **解析:** MinerU v4 API（异步任务模型，支持预签名上传）
-- **LLM:** DeepSeek V4 / OpenAI / Claude
-- **搜索:** arXiv + Semantic Scholar
-- **安全:** HTTPS 强制 / DPAPI 加密（桌面）+ Android Keystore（移动端）/ 日志脱敏
-- **UI 主题:** 自定义双主题 ColorScheme（深紫+暖金 / 暖白+金）
-- **UI 字体:** Google Fonts — Playfair Display, Inter, Noto Serif SC
-- **UI 动效:** AnimationController + CustomPainter 动感渐变背景
-- **测试:** 320+ 个单元测试覆盖 models/services/utils/API
-- **CLI 工具:** 纯 Dart 命令行，`dart run tool/paperpal.dart`
-- **打包:** Windows: Inno Setup + ZIP / Android: APK
-- **CI:** GitHub Actions (analyze → test → build → release)
+| 公式识别 / 表格识别 | 解析时是否提取 | 开启 |
 
 ## 许可
 
