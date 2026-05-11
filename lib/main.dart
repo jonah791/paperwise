@@ -23,6 +23,7 @@ import 'ui/pages/settings_page.dart';
 import 'ui/pages/welcome_page.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/widgets/avatar_helpers.dart';
+import 'ui/widgets/animated_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -243,10 +244,11 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
           ),
           duration: const Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+      ),
+      ),
+    );
   }
+}
 
   @override
   void dispose() {
@@ -349,7 +351,8 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final network = Dependencies.of(context).networkService;
     return Scaffold(
-      body: CallbackShortcuts(
+      body: AnimatedBackground(
+        child: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.keyS, control: true): () => setState(() => _currentIndex = 0),
           const SingleActivator(LogicalKeyboardKey.keyL, control: true): () => setState(() => _currentIndex = 1),
