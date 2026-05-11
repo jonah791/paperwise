@@ -24,6 +24,7 @@ import 'ui/pages/welcome_page.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/widgets/avatar_helpers.dart';
 import 'ui/widgets/animated_background.dart';
+import 'ui/widgets/page_transition.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -298,6 +299,13 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
         themeMode: _themeMode,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: {
+            TargetPlatform.windows: const SlideInTransitionBuilder(),
+            TargetPlatform.android: const SlideInTransitionBuilder(),
+            TargetPlatform.iOS: const SlideInTransitionBuilder(),
+          },
+        ),
         home: _welcomeShown
             ? _AppShell(
                 onThemeChanged: (mode) => setState(() => _themeMode = mode),
