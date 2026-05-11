@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/config.dart';
+import '../widgets/page_transition.dart';
 
 extension AppThemeModeX on AppThemeMode {
   ThemeMode toFlutterThemeMode() {
@@ -211,6 +212,13 @@ class AppTheme {
       ),
       navigationRailTheme: const NavigationRailThemeData(
         labelType: NavigationRailLabelType.all,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.windows: SlideInTransitionBuilder(),
+          TargetPlatform.android: SlideInTransitionBuilder(),
+          TargetPlatform.iOS: SlideInTransitionBuilder(),
+        },
       ),
     );
   }

@@ -80,7 +80,7 @@ class _SearchPageState extends State<SearchPage> {
       final result = SearchResult(
         title: title ?? url,
         authors: [],
-        pdfUrl: pdfUrl!,
+        pdfUrl: pdfUrl,
         source: 'url',
       );
       final file = await deps.searchService.downloadPdf(result, tempDir.path,

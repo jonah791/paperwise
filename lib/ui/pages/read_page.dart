@@ -165,20 +165,6 @@ class _ReadPageState extends State<ReadPage> {
     );
   }
 
-  Widget _buildHighlightedText(String text, {bool highlighted = false}) {
-    if (!highlighted) return Text(text);
-    final secondary = Theme.of(context).colorScheme.secondary;
-    return Text(
-      text,
-      style: TextStyle(
-        color: secondary,
-        background: Paint()
-          ..color = secondary.withValues(alpha: 0.18)
-          ..style = PaintingStyle.fill,
-      ),
-    );
-  }
-
   Widget _buildArticle(String text, ThemeData theme) {
     final segments = _splitByLatex(text);
 
@@ -618,13 +604,6 @@ class _ReadPageState extends State<ReadPage> {
       text: _noteController.text.trim(),
     );
     _noteController.clear();
-    _notes = deps.noteService.getNotesForPaper(widget.paper.id);
-    setState(() {});
-  }
-
-  Future<void> _deleteNote(String noteId) async {
-    final deps = Dependencies.of(context);
-    await deps.noteService.deleteNote(noteId);
     _notes = deps.noteService.getNotesForPaper(widget.paper.id);
     setState(() {});
   }

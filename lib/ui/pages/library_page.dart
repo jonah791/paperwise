@@ -172,7 +172,7 @@ class _LibraryPageState extends State<LibraryPage> {
     final isSelected = _selected.contains(paper.id);
     final isReadable = paper.status == PaperStatus.parsed || paper.status == PaperStatus.translated;
     final suits = ['\u2660', '\u2665', '\u2666', '\u2663'];
-    final suit = suits[(paper.id?.hashCode ?? 0) % 4];
+    final suit = suits[(paper.id.hashCode) % 4];
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),

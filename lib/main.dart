@@ -15,7 +15,6 @@ import 'core/services/memory_service.dart';
 import 'core/services/portrait_service.dart';
 import 'core/services/avatar_service.dart';
 import 'core/api/llm_provider.dart';
-import 'core/models/config.dart';
 import 'core/utils/logger.dart';
 import 'ui/pages/search_page.dart';
 import 'ui/pages/library_page.dart';
@@ -24,7 +23,6 @@ import 'ui/pages/welcome_page.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/widgets/avatar_helpers.dart';
 import 'ui/widgets/animated_background.dart';
-import 'ui/widgets/page_transition.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -245,11 +243,10 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
           ),
           duration: const Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
-      ),
-      ),
-    );
+        ),
+      );
+    }
   }
-}
 
   @override
   void dispose() {
@@ -299,13 +296,6 @@ class _PaperPalAppState extends State<PaperPalApp> with TrayListener {
         themeMode: _themeMode,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
-        pageTransitionsTheme: PageTransitionsTheme(
-          builders: {
-            TargetPlatform.windows: const SlideInTransitionBuilder(),
-            TargetPlatform.android: const SlideInTransitionBuilder(),
-            TargetPlatform.iOS: const SlideInTransitionBuilder(),
-          },
-        ),
         home: _welcomeShown
             ? _AppShell(
                 onThemeChanged: (mode) => setState(() => _themeMode = mode),
@@ -408,6 +398,7 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
             ],
           ),
         ),
+      ),
       ),
     );
   }

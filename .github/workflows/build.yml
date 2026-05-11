@@ -39,23 +39,51 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
+      - name: Get version
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $ver = $tag -replace '^v', ''
+          echo "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - run: flutter build windows --release
-      - name: Package distribution
+
+      - name: Package ZIP (portable)
+        shell: pwsh
         run: |
           cd build/windows/x64/runner/Release
           Compress-Archive -Path * -DestinationPath ALICE-PaperPal-${{ github.ref_name }}.zip
-      - name: Upload ZIP
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress --confirm
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.version.outputs.version }}"
+          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" windows\installer.iss /DMyAppVersion=$ver
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ALICE-PaperPal-${{ github.ref_name }}
-          path: build/windows/x64/runner/Release/ALICE-PaperPal-*.zip
+          path: |
+            build/windows/x64/runner/Release/ALICE-PaperPal-*.zip
+            build/installer/ALICE-PaperPal-*-Setup.exe
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             build/windows/x64/runner/Release/ALICE-PaperPal-*.zip
+            build/installer/ALICE-PaperPal-*-Setup.exe
           body: |
             Download ALICE PaperPal ${{ github.ref_name }}
+
+            **Installers:**
+            - `ALICE-PaperPal-*-Setup.exe` — 安装包（推荐）
+            - `ALICE-PaperPal-*.zip` — 便携版（解压即用）
 
             AI-powered paper reading assistant with personality.
 
