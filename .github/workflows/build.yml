@@ -64,31 +64,69 @@ jobs:
           $ver = "${{ steps.version.outputs.version }}"
           & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" windows\installer.iss /DMyAppVersion=$ver
 
-      - name: Upload artifacts
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ALICE-PaperPal-${{ github.ref_name }}
+          name: ALICE-PaperPal-Windows-${{ github.ref_name }}
           path: |
             build/windows/x64/runner/Release/ALICE-PaperPal-*.zip
             build/installer/ALICE-PaperPal-*-Setup.exe
+
+  build-android:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [analyze, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+
+      - run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ALICE-PaperPal-APK-${{ github.ref_name }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, build-android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ALICE-PaperPal-*
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/windows/x64/runner/Release/ALICE-PaperPal-*.zip
-            build/installer/ALICE-PaperPal-*-Setup.exe
+            ALICE-PaperPal-*.zip
+            ALICE-PaperPal-*-Setup.exe
+            app-release.apk
           body: |
             Download ALICE PaperPal ${{ github.ref_name }}
 
-            **Installers:**
+            **Windows:**
             - `ALICE-PaperPal-*-Setup.exe` — 安装包（推荐）
             - `ALICE-PaperPal-*.zip` — 便携版（解压即用）
+
+            **Android:**
+            - `app-release.apk` — Android APK
 
             AI-powered paper reading assistant with personality.
 
             ### Requirements
             - Windows 10/11
+            - Android 7.0+ (API 24+)
             - DeepSeek API Key (get at https://platform.deepseek.com)
 
             ### Features
@@ -98,6 +136,5 @@ jobs:
             - Stream Q&A: real-time token-by-token responses
             - PDF search, upload, URL import, file association
             - Multi-paper comparison, notes, export
-
-            ### Changelog
-            See CHANGELOG.md for details.
+            - Alice in Wonderland themed UI (v0.2.0+)
+            - Android mobile support (v0.3.0+)

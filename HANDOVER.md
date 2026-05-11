@@ -1,7 +1,7 @@
 # ALICE PaperPal — 项目交接文档
 
 **项目名：** ALICE PaperPal  
-**版本：** v0.2.0  
+**版本：** v0.3.0  
 **仓库：** https://github.com/jonah791/alice-paperpal  
 **技术栈：** Flutter (Dart) 桌面端 Windows EXE + CLI 命令行工具  
 **构建状态：** CI 自动构建 → Release 发布（ZIP 便携版 + Setup.exe 安装包）
@@ -27,7 +27,7 @@ v0.2.0 新增 **Alice in Wonderland 主题 UI**——完整双主题系统（深
 | CLI 工具 | 纯 Dart，`dart run tool/paperpal.dart`（无 Flutter 依赖） |
 | UI 主题 | 自定义双主题 ColorScheme（深紫#07050D + 暖金#E8B84B / 暖白#FFFBF3 + 金#C28A2C） |
 | UI 字体 | Google Fonts：Playfair Display（标题）、Inter（UI）、Noto Serif SC（中文阅读） |
-| 打包分发 | ZIP 便携版 + Inno Setup 安装包（含 PDF 文件关联） |
+| 打包分发 | 桌面：ZIP 便携版 + Inno Setup 安装包<br>Android：APK（CI 构建） |
 | CI/CD | GitHub Actions（analyze → test → build → package → release） |
 
 ---

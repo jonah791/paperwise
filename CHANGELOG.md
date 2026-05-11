@@ -1,6 +1,24 @@
 # Changelog
 
-## [0.2.0] - 2026-05-11
+## [0.3.0] - 2026-05-11
+
+### Added — Android Mobile Support
+
+- **Platform abstraction layer**: `PlatformService` with `DesktopPlatformService` and `AndroidPlatformService` implementations
+- **Android Keystore encryption**: API keys secured via `flutter_secure_storage` on Android (replaces Windows DPAPI)
+- **Adaptive navigation**: Mobile uses `NavigationBar` (bottom tabs), desktop retains `NavigationRail` (side rail), auto-switches based on screen width (600dp threshold)
+- **Read page mobile adaptations**: Notes panel opens as `DraggableScrollableSheet` BottomSheet, side-by-side mode hidden on mobile, AppBar overflow menu for secondary actions
+- **Mobile PDF opening**: Uses `open_filex` package to open PDFs via Android intents
+- **Search page responsive**: Button row wraps to next line on narrow screens
+- **Explain dialog width**: Fixed 560px changed to `maxWidth: 560` for narrow screens
+- **Android project scaffold**: `android/` directory with `AndroidManifest.xml` (INTERNET + ACCESS_NETWORK_STATE permissions)
+- **CI/CD Android build**: GitHub Actions builds `app-release.apk` on Ubuntu, uploaded to Releases alongside Windows artifacts
+
+### Changed
+
+- `ConfigService` now requires `PlatformService` constructor argument
+- `main()` detects platform and conditionally initializes `window_manager`/`tray_manager` (skipped on Android)
+- `Dependencies` includes `configService.platform` for widget-level platform checks
 
 ### Added — Alice in Wonderland UI Redesign
 
