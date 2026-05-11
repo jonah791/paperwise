@@ -9,6 +9,7 @@ import '../../core/services/export_service.dart';
 import '../../main.dart';
 import '../widgets/explain_dialog.dart';
 import '../widgets/avatar_helpers.dart';
+import '../widgets/progress_bar.dart';
 
 final _log = Logger('ReadPage');
 
@@ -32,6 +33,7 @@ class _ReadPageState extends State<ReadPage> {
   bool _showNotes = false;
   final _noteController = TextEditingController();
   List<Note> _notes = [];
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -57,6 +59,7 @@ class _ReadPageState extends State<ReadPage> {
   void dispose() {
     _qaController.dispose();
     _noteController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -112,31 +115,36 @@ class _ReadPageState extends State<ReadPage> {
           const SizedBox(width: 4),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: _viewMode == _ViewMode.sideBySide
-                      ? Row(
-                          children: [
-                            Expanded(child: _buildContent(theme, _markdown ?? '')),
-                            const VerticalDivider(width: 1),
-                            Expanded(child: _buildContent(theme, _translation ?? _markdown ?? '')),
-                          ],
-                        )
-                      : _buildContent(theme, displayText),
+          ScrollProgressBar(controller: _scrollController),
+          Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _viewMode == _ViewMode.sideBySide
+                          ? Row(
+                              children: [
+                                Expanded(child: _buildContent(theme, _markdown ?? '', controller: _scrollController)),
+                                const VerticalDivider(width: 1),
+                                Expanded(child: _buildContent(theme, _translation ?? _markdown ?? '')),
+                              ],
+                            )
+                          : _buildContent(theme, displayText, controller: _scrollController),
+                    ),
+                    if (_showNotes)
+                      SizedBox(
+                        width: 280,
+                        child: _buildNotesPanel(theme),
+                      ),
+                  ],
                 ),
-                if (_showNotes)
-                  SizedBox(
-                    width: 280,
-                    child: _buildNotesPanel(theme),
-                  ),
-              ],
-            ),
+              ),
+              _buildQAPanel(theme),
+            ],
           ),
-          _buildQAPanel(theme),
         ],
       ),
     );
@@ -150,8 +158,9 @@ class _ReadPageState extends State<ReadPage> {
     };
   }
 
-  Widget _buildContent(ThemeData theme, String text) {
+  Widget _buildContent(ThemeData theme, String text, {ScrollController? controller}) {
     return SingleChildScrollView(
+      controller: controller,
       padding: const EdgeInsets.all(24),
       child: _buildArticle(text, theme),
     );
