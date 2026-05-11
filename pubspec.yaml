@@ -25,6 +25,7 @@ dependencies:
   ffi: any
   connectivity_plus: any
   image_picker: any
+  google_fonts: any
 
 dev_dependencies:
   flutter_test:
