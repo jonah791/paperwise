@@ -166,6 +166,20 @@ class _ReadPageState extends State<ReadPage> {
     );
   }
 
+  Widget _buildHighlightedText(String text, {bool highlighted = false}) {
+    if (!highlighted) return Text(text);
+    final secondary = Theme.of(context).colorScheme.secondary;
+    return Text(
+      text,
+      style: TextStyle(
+        color: secondary,
+        background: Paint()
+          ..color = secondary.withValues(alpha: 0.18)
+          ..style = PaintingStyle.fill,
+      ),
+    );
+  }
+
   Widget _buildArticle(String text, ThemeData theme) {
     final segments = _splitByLatex(text);
 
@@ -173,10 +187,19 @@ class _ReadPageState extends State<ReadPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: segments.map((seg) {
         if (seg is _LatexSegment) {
-          return GestureDetector(
-            onTap: () => _explainFormula(seg.latex, _findContext(text, seg.latex)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+          return Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.secondary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+              ),
+            ),
+            alignment: Alignment.center,
+            child: GestureDetector(
+              onTap: () => _explainFormula(seg.latex, _findContext(text, seg.latex)),
               child: Math.tex(
                 seg.latex,
                 textStyle: TextStyle(
@@ -511,41 +534,50 @@ class _ReadPageState extends State<ReadPage> {
   }
 
   Widget _buildNoteCard(Note note, ThemeData theme) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (note.selectedText != null && note.selectedText!.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(4),
-                margin: const EdgeInsets.only(bottom: 4),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(note.selectedText!,
-                    style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
-              ),
-            Text(note.text, style: theme.textTheme.bodySmall),
-            Row(
-              children: [
-                Text(_formatDate(note.createdAt),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    )),
-                const Spacer(),
-                InkWell(
-                  onTap: () => _deleteNote(note.id),
-                  child: Icon(Icons.delete_outline, size: 14,
-                      color: theme.colorScheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(
+            color: theme.colorScheme.secondary,
+            width: 3,
+          ),
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (note.selectedText != null && note.selectedText!.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(4),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(note.selectedText!,
+                  style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+            ),
+          Text(
+            note.text,
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            _formatDate(note.createdAt),
+            style: TextStyle(
+              fontSize: 10,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
+            ),
+          ),
+        ],
       ),
     );
   }
