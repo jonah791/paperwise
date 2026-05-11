@@ -159,69 +159,102 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildPaperCard(BuildContext context, Paper paper, ThemeData theme) {
     final isSelected = _selected.contains(paper.id);
     final isReadable = paper.status == PaperStatus.parsed || paper.status == PaperStatus.translated;
+    final suits = ['\u2660', '\u2665', '\u2666', '\u2663'];
+    final suit = suits[(paper.id?.hashCode ?? 0) % 4];
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      color: isSelected ? theme.colorScheme.primaryContainer : null,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          if (_selected.isNotEmpty) {
-            _toggleSelection(paper.id);
-          } else if (isReadable) {
-            _log.info('open: ${paper.title}');
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ReadPage(paper: paper)),
-            );
-          }
-        },
-        onLongPress: () => _toggleSelection(paper.id),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              if (_selected.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: Icon(
-                    isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                    size: 20,
-                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 500),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        color: isSelected ? theme.colorScheme.primaryContainer : null,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            if (_selected.isNotEmpty) {
+              _toggleSelection(paper.id);
+            } else if (isReadable) {
+              _log.info('open: ${paper.title}');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ReadPage(paper: paper)),
+              );
+            }
+          },
+          onLongPress: () => _toggleSelection(paper.id),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: theme.colorScheme.secondary.withValues(alpha: 0.3),
+                    width: 3,
                   ),
                 ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(paper.title,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-                    if (paper.authors.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(paper.authors.join(', '),
-                          style: theme.textTheme.bodySmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ],
-                  ],
-                ),
               ),
-              const SizedBox(width: 16),
-              Chip(
-                label: Text(_statusText(paper.status), style: const TextStyle(fontSize: 11)),
-                backgroundColor: paper.status.color?.withValues(alpha: 0.1),
-                side: BorderSide(color: paper.status.color?.withValues(alpha: 0.3) ?? Colors.transparent),
+              child: Row(
+                children: [
+                  if (_selected.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Icon(
+                        isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                        size: 20,
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(suit, style: theme.textTheme.titleSmall),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(paper.title,
+                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                            ),
+                          ],
+                        ),
+                        if (paper.authors.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(paper.authors.join(', '),
+                              style: theme.textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Chip(
+                    label: Text(_statusText(paper.status), style: const TextStyle(fontSize: 11)),
+                    backgroundColor: paper.status.color?.withValues(alpha: 0.1),
+                    side: BorderSide(color: paper.status.color?.withValues(alpha: 0.3) ?? Colors.transparent),
+                  ),
+                  if (_selected.isEmpty)
+                    PopupMenuButton<String>(
+                      onSelected: (v) {
+                        if (v == 'delete') _confirmDelete(context, paper);
+                      },
+                      itemBuilder: (ctx) => [
+                        const PopupMenuItem(value: 'delete', child: Text('删除')),
+                      ],
+                    ),
+                ],
               ),
-              if (_selected.isEmpty)
-                PopupMenuButton<String>(
-                  onSelected: (v) {
-                    if (v == 'delete') _confirmDelete(context, paper);
-                  },
-                  itemBuilder: (ctx) => [
-                    const PopupMenuItem(value: 'delete', child: Text('删除')),
-                  ],
-                ),
-            ],
+            ),
           ),
         ),
       ),
