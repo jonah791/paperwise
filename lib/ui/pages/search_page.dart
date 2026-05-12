@@ -299,7 +299,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  static const _fadeTween = Tween<double>(begin: 0.0, end: 1.0);
+  static final _fadeTween = Tween<double>(begin: 0.0, end: 1.0);
 
   Widget _buildBody(ThemeData theme) {
     if (_loading) {
