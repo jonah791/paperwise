@@ -155,9 +155,6 @@ class MineruApi {
       await _downloadDio.put(
         uploadUrl,
         data: Stream.fromIterable([fileBytes]),
-        options: Options(
-          headers: {'Content-Type': 'application/octet-stream'},
-        ),
       );
       _log.info('submitFileUpload: batch_id=$batchId, file uploaded (${fileBytes.length} bytes)');
       return batchId;
