@@ -18,7 +18,7 @@ class SearchService {
         _s2 = s2 ?? S2Api();
 
   Future<(List<SearchResult>, String?)> search(String query) async {
-    if (query.trim().isEmpty) return ([], null);
+    if (query.trim().isEmpty) return (<SearchResult>[], null);
 
     try {
       final results = await Future.wait([
@@ -43,11 +43,11 @@ class SearchService {
       _log.warning('search failed: "$query" → $e');
       if (e is DioException) {
         if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
-          return ([], '请求超时，请检查网络后重试');
+          return (<SearchResult>[], '请求超时，请检查网络后重试');
         }
-        return ([], '网络请求失败，请检查网络连接');
+        return (<SearchResult>[], '网络请求失败，请检查网络连接');
       }
-      return ([], '搜索出错，请稍后重试');
+      return (<SearchResult>[], '搜索出错，请稍后重试');
     }
   }
 

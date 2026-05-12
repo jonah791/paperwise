@@ -79,7 +79,7 @@ class PaperService {
   Future<void> _persistPaper(Paper p) => _cache.savePaperMeta(p);
 
   Stream<ParseProgress> get parseProgress => _parse.progressStream;
-  Future<List<SearchResult>> search(String query) => _search.search(query);
+  Future<(List<SearchResult>, String?)> search(String query) => _search.search(query);
 
   Future<Paper?> importFromSearch(SearchResult result, {void Function(int, int)? onProgress}) async {
     final apiKey = await _config.readMineruApiKey();
