@@ -63,6 +63,13 @@ void main() async {
   await avatarService.init();
 
   final searchService = SearchService();
+
+  final networkService = NetworkService();
+  networkService.init();
+
+  final noteService = NoteService();
+  await noteService.init();
+
   final paperService = PaperService(
     cache: cacheService,
     search: searchService,
@@ -75,11 +82,6 @@ void main() async {
   );
   await paperService.init();
 
-  final networkService = NetworkService();
-  networkService.init();
-
-  final noteService = NoteService();
-  await noteService.init();
     await windowManager.waitUntilReadyToShow();
     await windowManager.setTitle('PaperPal');
     await windowManager.setMinimumSize(const Size(1024, 700));
