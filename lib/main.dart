@@ -82,6 +82,7 @@ void main() async {
   );
   await paperService.init();
 
+  if (!platform.isAndroid) {
     await windowManager.waitUntilReadyToShow();
     await windowManager.setTitle('PaperPal');
     await windowManager.setMinimumSize(const Size(1024, 700));
