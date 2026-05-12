@@ -4,7 +4,7 @@
 **版本：** v0.3.0  
 **仓库：** https://github.com/jonah791/alice-paperpal  
 **技术栈：** Flutter (Dart) 桌面端 Windows EXE + Android APK + CLI 命令行工具  
-**构建状态：** CI 自动构建 → Release 发布（ZIP 便携版 + Setup.exe 安装包 + APK）
+**构建状态：** CI 自动构建 → Release 发布（ZIP 便携版 + Setup.exe 安装包 + split APK）
 
 ---
 
@@ -525,13 +525,15 @@ flutter build windows --release
 **Android APK：**
 
 ```bash
-flutter build apk --release
+flutter build apk --release --split-per-abi
 ```
 
-产物：`build/app/outputs/flutter-apk/app-arm64-v8a-release.apk`（约 25MB，推荐）<br>
-其他 ABI：`app-armeabi-v7a-release.apk`（32位）、`app-x86_64-release.apk`（模拟器）
+产物：
+- `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` — **ARM64**（主流手机，约 30MB，推荐下载）
+- `build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk` — 32 位（老旧设备）
+- `build/app/outputs/flutter-apk/app-x86_64-release.apk` — 模拟器
 
-> APK 体积从 59.8MB 降至约 30MB（arm64-v8a），得益于 ABI 拆分——每种 CPU 架构独立打包，去掉无用原生库。R8 压缩因 Flutter Play Core 依赖冲突暂未启用。
+> `--split-per-abi` 按 CPU 架构分别打包，每个 APK 只包含一套原生库。配合 `isMinifyEnabled=false` + `isShrinkResources=false` 避免 R8 压缩导致的 `play-core` 依赖冲突。
 
 ### 5.2 构建 Inno Setup 安装包（本地）
 
@@ -577,8 +579,9 @@ master push / tag v* ── test (flutter test)
 **构建产物：**
 - `ALICE-PaperPal-v{version}.zip` — Windows 便携版，解压即用
 - `ALICE-PaperPal-v{version}-Setup.exe` — Windows 安装包，含 PDF 文件关联
-- `paperpal-v{version}-app-arm64-v8a-release.apk` — Android ARM64（主流手机，约 25MB）
-- `paperpal-v{version}-app-armeabi-v7a-release.apk` — Android 32位（老旧设备）
+- `paperpal-v{version}-app-arm64-v8a-release.apk` — Android ARM64（主流手机，约 30MB）
+- `paperpal-v{version}-app-armeabi-v7a-release.apk` — Android 32 位（老旧设备）
+- `paperpal-v{version}-app-x86_64-release.apk` — Android 模拟器
 
 **注意：** Release 需要 `permissions: contents: write` 权限，已经在 workflow 中配置。
 
@@ -665,6 +668,7 @@ git push origin v0.x.x
 | 15 | Android 导航栏 | 自适应 `NavigationBar` 在 <360dp 宽设备上文字可能截断，考虑缩小图标/文字间距 |
 | 16 | Android 返回键 | 当前未拦截系统返回键（返回即退出应用）。如需返回上一页/确认退出，需在 `MaterialApp` 中处理 `PopScope` |
 | 17 | APK 未签名 | CI 构建的 APK 是 debug-unsigned。正式分发需配置 Android 签名（`key.properties` + `signingConfigs`） |
+| 18 | R8 + Play Core 冲突 | `flutter build apk --release` 默认启用 R8，但 R8 会剥离 `play-core` 的 `SplitCompatApplication`。当前通过 `isMinifyEnabled=false` 跳过。如需 R8 压缩，需在 `proguard-rules.pro` 中添加 `play-core` 的 keep rules |
 
 ---
 
@@ -830,6 +834,13 @@ flutter build apk --release       # → app-release.apk
 - `deploy-windows` 创建 Release 并上传 Windows 产物
 - `deploy-android` 上传 APK 到同一 Release
 - 修复：ICO 全 PNG 格式、choco --force、中文语言包移除
+
+**APK 体积优化：**
+- 启用 `--split-per-abi` 按 CPU 架构拆分，APK 从 59.8MB 降至 ~30MB（arm64-v8a）
+- 禁用 R8 代码压缩（`isMinifyEnabled=false`）和资源压缩（`isShrinkResources=false`）
+  - R8 因 `play-core` 依赖（`SplitCompatApplication`）缺少 keep rules 而失败
+  - 30MB 已足够小，R8 收益有限，暂不启用
+- CI 构建 3 个 ABIs：arm64-v8a / armeabi-v7a / x86_64
 
 ### v0.2.0（2026-05-11）— Alice in Wonderland UI Redesign
 
