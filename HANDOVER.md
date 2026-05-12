@@ -1,7 +1,7 @@
 # ALICE PaperPal — 项目交接文档
 
 **项目名：** ALICE PaperPal  
-**版本：** v0.3.2  
+**版本：** v0.3.3  
 **仓库：** https://github.com/jonah791/alice-paperpal  
 **技术栈：** Flutter (Dart) 桌面端 Windows EXE + Android APK + CLI 命令行工具  
 **构建状态：** CI 自动构建 → Release 发布（ZIP 便携版 + Setup.exe 安装包 + split APK）
@@ -806,6 +806,14 @@ flutter build apk --release       # → app-release.apk
 ---
 
 ## 十二、版本历史
+
+### v0.3.3（2026-05-12）— 搜索页灰屏修复
+
+**Bug 修复：**
+- 灰屏根因：`Expanded` 作为 `Wrap` 的子节点。`Expanded` 需要 `Flex` 父节点（`Row`/`Column`），放在 `Wrap` 内导致渲染时 `TypeError`，Flutter 以灰色矩形代替
+- 修复：`_buildSearchBar` 改用 `LayoutBuilder`，宽屏（> 600dp）用 `Row` + `Expanded`，窄屏用 `Column` + `TextField` 独占一行
+- 按钮复用抽取为 `_searchButton()`、`_uploadButton()`、`_linkButton()` 三个 helper 方法
+- `TweenAnimationBuilder.tween` 提取为 `static final` 类变量，避免每帧重建
 
 ### v0.3.2（2026-05-12）— 异步安全与崩溃修复
 
