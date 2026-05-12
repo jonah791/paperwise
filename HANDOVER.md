@@ -433,7 +433,7 @@ v0.3.0 已通过 `PlatformService` 抽象层实现了跨平台加密：桌面端
 
 | API | 端点 | 用途 | 限频 |
 |---|---|---|---|
-| MinerU | `POST /api/v4/extract/task`（异步提交）<br>`GET /api/v4/extract/task/{task_id}`（轮询） | PDF 解析 | 取决于套餐 |
+| MinerU | 标准：`POST /api/v4/extract/task`（URL提交）<br>`POST /api/v4/file-urls/batch` + `PUT`（文件上传）<br>Agent（免 Key）：`POST /api/v1/agent/parse/file`（≤10MB/20页） | PDF 解析 | 标准：1000 页/天高优先级<br>Agent：IP 限频 |
 | DeepSeek | `POST /v1/chat/completions` | LLM 问答 | 500 RPM（免费用户） |
 | arXiv | `GET http://export.arxiv.org/api/query` | 论文搜索 | 1 req/3s |
 | Semantic Scholar | `GET https://api.semanticscholar.org/graph/v1/paper/search` | 论文搜索 | 100 req/5min |
@@ -669,6 +669,9 @@ git push origin v0.x.x
 | 16 | Android 返回键 | 当前未拦截系统返回键（返回即退出应用）。如需返回上一页/确认退出，需在 `MaterialApp` 中处理 `PopScope` |
 | 17 | APK 未签名 | CI 构建的 APK 是 debug-unsigned。正式分发需配置 Android 签名（`key.properties` + `signingConfigs`） |
 | 18 | R8 + Play Core 冲突 | `flutter build apk --release` 默认启用 R8，但 R8 会剥离 `play-core` 的 `SplitCompatApplication`。当前通过 `isMinifyEnabled=false` 跳过。如需 R8 压缩，需在 `proguard-rules.pro` 中添加 `play-core` 的 keep rules |
+| 19 | MinerU 文件上传 403 | OSS 预签名上传 URL 的签名不包含 `Content-Type` 字段。Dio PUT 时若设置 `Content-Type` 头会导致签名校验失败返回 403。修复：PUT 时不设置 `Content-Type` 头（Dio 默认不发送该头即可） |
+| 20 | MinerU 标准 API 文件上传依赖代理 | 通过 `/api/v4/file-urls/batch` 获取预签名 URL 后，PUT 上传文件到 OSS 时会受本地代理配置影响。如遇 `SocketException: Connection reset`，需清空 `HTTP_PROXY`/`HTTPS_PROXY` 环境变量 |
+| 21 | MinerU Agent API 备选 | MinerU 提供免 Token 的 Agent 轻量 API（`/api/v1/agent/parse/file`），限制 10MB/20 页，仅输出 Markdown。可作为标准 API 的 fallback，但当前 CLI 未实现自动降级 |
 
 ---
 
@@ -708,6 +711,7 @@ flutter build apk --release       # → app-release.apk
 | `dpapi.encrypt()` 返回 null | 在 Linux/测试环境运行（无 DPAPI） | `DesktopPlatformService.encrypt()` 已做 null → plaintext 回退。`ConfigService` 测试使用 `_TestPlatform` mock |
 | CI Release 缺少 Windows 文件 | Release job 的 `download-artifact` 路径不匹配 | 改为每个 build job 直接用 `gh release upload` 上传，见 `.github/workflows/build.yml` |
 | CLI 命令报 `401` | 某些 LLM 端点不支持 Markdown system prompt | 已在 `cli_helpers.dart` 中修复为纯文本格式 |
+| `import pdf` 报 403 | OSS 预签名 URL 签名与请求头不匹配 | 移除 PUT 请求中的 `Content-Type` 头。详见 `mineru_api.dart` 中 `_submitFileUpload` 的 `_downloadDio.put()` 调用 |
 | Google Fonts 不显示 | 网络不通或字体缓存未生效 | 检查网络连接，或在本地预下载字体文件 |
 
 ### 8.3 代码规范
@@ -841,6 +845,9 @@ flutter build apk --release       # → app-release.apk
   - R8 因 `play-core` 依赖（`SplitCompatApplication`）缺少 keep rules 而失败
   - 30MB 已足够小，R8 收益有限，暂不启用
 - CI 构建 3 个 ABIs：arm64-v8a / armeabi-v7a / x86_64
+
+**Bug 修复：**
+- MinerU 文件上传 403：OSS 预签名 URL 的签名不含 `Content-Type`，移除 PUT 请求中的 `Content-Type: application/octet-stream` 头解决
 
 ### v0.2.0（2026-05-11）— Alice in Wonderland UI Redesign
 
